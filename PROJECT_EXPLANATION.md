@@ -327,6 +327,43 @@ In a campus Lost & Found application, **trust and accountability** are paramount
 
 ---
 
-## 13. Next Steps
+## 13. Feature 3 Explanation: Campus Feed & Item Discovery
+
+### Purpose
+The Campus Feed is the centerpiece of Finders Keepers. It enables students to browse, filter, and search for lost or found items across campus. Feature 3 introduces:
+1. **Item Domain Model (`Item`)**: Encapsulates `id`, `title`, `description`, `type` (`lost`/`found`), `status` (`open`/`claimPending`/`reunited`), `category`, `approximateLocation`, and `verificationQuestionsCount`.
+2. **Item Repository (`ItemRepository`)**: Abstract contract with an in-memory implementation seeded with realistic campus items (headphones, wallets, keys, books).
+3. **Multi-Criteria Filtering (`feed_controller.dart`)**:
+   - `selectedTypeFilterProvider`: Segmented toggle (`All`, `Lost`, `Found`).
+   - `selectedCategoryFilterProvider`: Horizontal chips for 7 campus categories.
+   - `searchQueryProvider`: Real-time substring search matching title, description, and campus location.
+   - `filteredItemsProvider`: Derived provider computing the filtered list reactively.
+4. **ItemCard Component**: Minimal, spacious card displaying color-coded type badge, category tag, relative timestamp, and approximate landmark location.
+5. **Empty & Loading States**: Clean fallback UI when search or filters return zero matches.
+
+---
+
+## 14. Feed Data Flow
+
+```
+[ User Interaction ] (Search text, Type pill tab, Category chip)
+         │
+         ▼
+[ Feed Notifiers ] (SelectedTypeNotifier, SelectedCategoryNotifier, SearchQueryNotifier)
+         │
+         ▼
+[ filteredItemsProvider ]
+   (Watches itemsStreamProvider + filter notifiers)
+   (Computes matches without re-fetching from repository)
+         │
+         ▼
+[ HomeScreen ListView.separated ]
+   (Renders ItemCard widgets with smooth scrolling)
+```
+
+---
+
+## 15. Next Steps
 - Await approval from user.
-- Feature 3: Campus Feed & Item Discovery (Lost & Found switcher, Category filtering, Search bar, and ItemCard component).
+- Feature 4: Report Lost & Found Item (Multi-step report creation flow, photo attachment, and approximate campus landmark tagging).
+

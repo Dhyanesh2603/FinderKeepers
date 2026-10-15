@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finders Keepers — Comprehensive Technical Architecture & Project Guide</title>
+  <style>
+    :root {
+      --bg: #0F1012;
+      --surface: #16181B;
+      --surface-variant: #1F2227;
+      --border: #2A2E35;
+      --text-primary: #F3F4F6;
+      --text-secondary: #9CA3AF;
+      --muted-green: #2E7D52;
+      --muted-green-bg: rgba(46, 125, 82, 0.15);
+      --muted-amber: #C7771E;
+      --muted-amber-bg: rgba(199, 119, 30, 0.15);
+      --charcoal: #14171A;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--muted-green-bg);
+      color: #4ade80;
+      border: 1px solid var(--muted-green);
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    p.subtitle {
+      color: var(--text-secondary);
+      font-size: 16px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .progress-bar {
+      height: 10px;
+      background: var(--surface-variant);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 16px 0 8px 0;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 35%;
+      background: #4ade80;
+      border-radius: 999px;
+    }
+    .stages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .stage-item {
+      background: var(--surface-variant);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .stage-item.completed {
+      border-color: rgba(74, 222, 128, 0.4);
+    }
+    .stage-status {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .stage-status.done { color: #4ade80; }
+    .stage-status.pending { color: var(--text-secondary); }
+    .stage-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .stage-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 32px 0 16px 0;
+      border-left: 3px solid #4ade80;
+      padding-left: 12px;
+    }
+    h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin: 20px 0 8px 0;
+      color: #e5e7eb;
+    }
+    ul {
+      margin-left: 20px;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+    }
+    li { margin-bottom: 6px; }
+    code {
+      background: var(--surface-variant);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #fbbf24;
+      font-family: monospace;
+    }
+    pre {
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      margin: 16px 0;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    .qa-box {
+      background: var(--surface-variant);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border-left: 4px solid var(--muted-amber);
+    }
+    .qa-q {
+      font-weight: 600;
+      color: #f3f4f6;
+      margin-bottom: 6px;
+    }
+    .qa-a {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">● Active Project Documentation</div>
+      <h1>Finders Keepers</h1>
+      <p class="subtitle">Campus Lost & Found Platform — Architecture, Implementation & Interview Reference</p>
+    </header>
+
+    <!-- Project Status Overview -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-weight: 600; font-size: 16px;">Overall Completion Progress</span>
+        <span style="font-weight: 700; color: #4ade80;">35% Complete (4 / 11 Stages)</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+      <p style="font-size: 13px; color: var(--text-secondary);">
+        Completed: Toolchain Setup, Feature 1 (Core Design System), Feature 2 (Campus Auth), Feature 3 (Feed & Discovery).
+      </p>
+
+      <div class="stages-grid">
+        <div class="stage-item completed">
+          <div class="stage-status done">Stage 0 • Completed</div>
+          <div class="stage-title">Toolchain & Emulator</div>
+          <div class="stage-desc">Android Studio, SDK 36, Flutter 3.38, Pixel 8 virtual device setup.</div>
+        </div>
+
+        <div class="stage-item completed">
+          <div class="stage-status done">Stage 1 • Completed</div>
+          <div class="stage-title">Core Design System</div>
+          <div class="stage-desc">Tokens, Plus Jakarta Sans, AppButton, AppCard, AppTextField, GoRouter.</div>
+        </div>
+
+        <div class="stage-item completed">
+          <div class="stage-status done">Stage 2 • Completed</div>
+          <div class="stage-title">Campus Auth & Session</div>
+          <div class="stage-desc">AppUser model, .edu validation, AuthRepository, login/register UI, guards.</div>
+        </div>
+
+        <div class="stage-item completed">
+          <div class="stage-status done">Stage 3 • Completed</div>
+          <div class="stage-title">Feed & Item Discovery</div>
+          <div class="stage-desc">Type toggle (Lost/Found), categories, real-time search, ItemCard, feed state.</div>
+        </div>
+
+        <div class="stage-item">
+          <div class="stage-status pending">Stage 4 • Next Up</div>
+          <div class="stage-title">Report Item & Privacy Geo</div>
+          <div class="stage-desc">Multi-step reporting, photo upload, approximate area tagger, offline draft.</div>
+        </div>
+
+        <div class="stage-item">
+          <div class="stage-status pending">Stage 5 • Upcoming</div>
+          <div class="stage-title">Item Details & Area Map</div>
+          <div class="stage-desc">Fuzzed radius circle on campus map, secret question counter, contact CTA.</div>
+        </div>
+
+        <div class="stage-item">
+          <div class="stage-status pending">Stage 6 • Upcoming</div>
+          <div class="stage-title">Structured Ownership Quiz</div>
+          <div class="stage-desc">Identifying questions, anti-scam answers verification, claimant submission.</div>
+        </div>
+
+        <div class="stage-item">
+          <div class="stage-status pending">Stage 7 • Upcoming</div>
+          <div class="stage-title">Post-Verification Chat</div>
+          <div class="stage-desc">Secure peer-to-peer messaging unlocked strictly after ownership approval.</div>
+        </div>
+
+        <div class="stage-item">
+          <div class="stage-status pending">Stage 8 • Upcoming</div>
+          <div class="stage-title">Hive Cache & Offline Sync</div>
+          <div class="stage-desc">Local caching, offline drafts, auto-sync upon network reconnection.</div>
+        </div>
+
+        <div class="stage-item">
+          <div class="stage-item-inner">
+            <div class="stage-status pending">Stage 9 • Upcoming</div>
+            <div class="stage-title">Notifications & Status</div>
+            <div class="stage-desc">Claim notifications, status progression (Open → Pending → Reunited).</div>
+          </div>
+        </div>
+
+        <div class="stage-item">
+          <div class="stage-status pending">Stage 10 • Upcoming</div>
+          <div class="stage-title">Profile & Production Rules</div>
+          <div class="stage-desc">Student profile, my reports, Firestore security rules, release polish.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Technical Architecture Breakdown -->
+    <h2>Technical Architecture Deep-Dive</h2>
+    <div class="card">
+      <h3>1. Why Feature-First over Layer-First?</h3>
+      <p style="color: var(--text-secondary); margin-bottom: 12px;">
+        Traditional layer-first architecture groups code by technical responsibility (<code>views/</code>, <code>controllers/</code>, <code>models/</code>). As an application grows, modifying a single feature requires hunting across disconnected folders.
+      </p>
+      <p style="color: var(--text-secondary);">
+        In <strong>Feature-First</strong> (<code>features/auth/</code>, <code>features/item/</code>, <code>features/claim/</code>), all business logic, UI, and domain models related to a single capability live together. This modularity reduces cognitive load, enables independent refactoring, and matches how engineering teams divide work.
+      </p>
+
+      <h3 style="margin-top: 24px;">2. State Management Strategy (Riverpod 3)</h3>
+      <ul>
+        <li><strong>Compile-time Safety:</strong> Global constants analyzed at compile-time eliminate runtime <code>ProviderNotFoundException</code>.</li>
+        <li><strong>Modern Notifiers:</strong> Replaced deprecated <code>StateProvider</code> with Riverpod 3 <code>Notifier</code> and <code>AsyncNotifier</code>, cleanly organizing mutations into small, testable methods.</li>
+        <li><strong>Computed Selectivity:</strong> <code>filteredItemsProvider</code> watches <code>itemsStreamProvider</code>, <code>selectedTypeFilterProvider</code>, <code>selectedCategoryFilterProvider</code>, and <code>searchQueryProvider</code>. It only recomputes when one of those specific dependencies emits a change.</li>
+      </ul>
+
+      <h3 style="margin-top: 24px;">3. Privacy-First Campus Model</h3>
+      <p style="color: var(--text-secondary);">
+        In typical lost & found boards, users post exact phone numbers and specific serial numbers publicly, exposing victims to extortion and scam callers. Finders Keepers solves this through:
+      </p>
+      <ul>
+        <li><strong>Approximate Locations:</strong> Public listings only reveal fuzzified campus landmarks (e.g. "Main Library • 3rd Floor"), never exact desk coordinates.</li>
+        <li><strong>Hidden Identifiers:</strong> Distinguishing marks and serial numbers are stored as private verification questions that claimants must answer before contacting the finder.</li>
+      </ul>
+    </div>
+
+    <!-- Interview Notes & Master Questions -->
+    <h2>Interview Preparation Guide</h2>
+    <div class="card">
+      <div class="qa-box">
+        <div class="qa-q">Q1: How does Riverpod's computed Provider optimize list filtering performance?</div>
+        <div class="qa-a">
+          <strong>Answer:</strong> <code>filteredItemsProvider</code> is a pure derived provider. By watching individual filter notifiers (type, category, query) and the data stream, Riverpod caches the filtered list. If unrelated UI rebuilds happen, the filtering calculation does not run again. Widgets consuming <code>ref.watch(filteredItemsProvider)</code> only rebuild when the output list actually changes.
+        </div>
+      </div>
+
+      <div class="qa-box">
+        <div class="qa-q">Q2: Why program against an abstract <code>ItemRepository</code> instead of direct Firestore calls?</div>
+        <div class="qa-a">
+          <strong>Answer:</strong> It decouples the UI from network infrastructure. By introducing <code>ItemRepository</code>, we can test feed pagination, search filtering, and error states using <code>InMemoryItemRepository</code> in 5ms without network calls. When connecting to production Firestore, we simply implement <code>FirestoreCustomItemRepository implements ItemRepository</code> without modifying any screen or widget code.
+        </div>
+      </div>
+
+      <div class="qa-box">
+        <div class="qa-q">Q3: How do you handle reactive authentication redirect guards in GoRouter?</div>
+        <div class="qa-a">
+          <strong>Answer:</strong> GoRouter receives Riverpod's <code>authStateChangesProvider</code> in its top-level provider definition. When the auth stream emits a user or null, GoRouter re-evaluates its declarative <code>redirect</code> callback. If an unauthenticated user enters <code>/home</code>, it redirects to <code>/login</code>; if an authenticated student visits <code>/login</code>, it immediately redirects them to <code>/home</code>.
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
