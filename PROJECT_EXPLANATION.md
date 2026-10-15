@@ -226,6 +226,107 @@ chats/ (collection)
 
 ---
 
-## 9. Next Steps
+> **Status**: Feature 2 Completed (Campus Authentication, Session Management, and Hub Navigation)
+
+---
+
+## 9. Feature 2 Explanation: Authentication & Campus Student Session
+
+### Purpose
+In a campus Lost & Found application, **trust and accountability** are paramount. Strangers on the open internet cannot be allowed to claim items or contact students. Feature 2 introduces:
+1. **Campus Domain Enforcement**: Automated verification ensuring accounts use verified academic emails (`.edu` or campus domain).
+2. **Student Identity Model (`AppUser`)**: Encapsulates Student ID, full name, email, verification status, and registration timestamp.
+3. **Repository Pattern with Offline/Mock Support (`AuthRepository`)**: Decouples the UI from Firebase so the application can run in offline demo mode, automated CI tests, and production Firebase Auth without changing a single UI line.
+4. **Reactive Navigation Guards**: `GoRouter` listens to Riverpod's `authStateChangesProvider`. Logging in immediately routes to `/home`; logging out instantly revokes access and redirects to `/login`.
+5. **Ergonomic Testing Utilities**: Pre-seeded demo student (`student@campus.edu` / `password123`) with one-tap auto-fill on the login screen.
+
+---
+
+## 10. File-by-File Breakdown (Feature 2)
+
+### `lib/features/auth/domain/models/app_user.dart`
+- **Purpose**: Pure domain representation of a campus student.
+- **Responsibility**: Holds immutable user properties (`uid`, `email`, `displayName`, `studentId`, `isVerified`, `createdAt`) and provides JSON/Map serialization for Firestore.
+- **Why It Exists**: Separates database schemas from UI logic.
+- **Interactions**: Consumed by `auth_repository.dart`, `home_screen.dart`, and future claim/chat features.
+
+### `lib/features/auth/data/auth_repository.dart`
+- **Purpose**: Data layer handling login, registration, and active session streams.
+- **Responsibility**: Provides the abstract `AuthRepository` contract, campus domain validation (`validateCampusEmail`), and the `InMemoryAuthRepository` implementation.
+- **Why It Exists**: Following the Dependency Inversion Principle, UI controllers depend on an abstract interface rather than a concrete Firebase instance.
+- **Interactions**: Consumed by `auth_controller.dart` and `app_router.dart`.
+
+### `lib/features/auth/presentation/controllers/auth_controller.dart`
+- **Purpose**: Manages UI action states for authentication.
+- **Responsibility**: Extends Riverpod 3's `AsyncNotifier<void>` to track idle, loading, and error states during sign in and registration.
+- **Why It Exists**: Keeps widget classes purely declarative by moving business logic and asynchronous try/catch blocks into a dedicated controller.
+- **Interactions**: Consumed by `login_screen.dart`, `register_screen.dart`, and `home_screen.dart`.
+
+### `lib/features/auth/presentation/screens/login_screen.dart`
+- **Purpose**: Minimal, accessible student sign-in screen.
+- **Responsibility**: Collects campus email and password, provides demo auto-fill for interview testing, and triggers `AuthController.signIn`.
+- **Why It Exists**: Gives returning students immediate access to their claims, reports, and messages.
+- **Interactions**: Navigates from `splash_screen.dart` and links to `register_screen.dart`.
+
+### `lib/features/auth/presentation/screens/register_screen.dart`
+- **Purpose**: Student onboarding and account registration screen.
+- **Responsibility**: Collects Full Name, Student ID number, campus email, and password.
+- **Why It Exists**: Ensures every new user is bound to their student ID number before submitting claims or lost reports.
+- **Interactions**: Accessible from `login_screen.dart`.
+
+### `lib/features/home/presentation/screens/home_screen.dart`
+- **Purpose**: Authenticated dashboard landing screen.
+- **Responsibility**: Displays current student's name, ID badge, verified campus status, and sign-out action.
+- **Why It Exists**: Confirms successful authentication and acts as the mount point for Feature 3 (Browse & Feed).
+- **Interactions**: Accessible only when authenticated; protected by `app_router.dart` guards.
+
+---
+
+## 11. Authentication Flow Diagram
+
+```
+[ Student Enters Credentials ]
+               │
+               ▼
+[ LoginScreen / RegisterScreen ]
+               │ (Calls ref.read(authControllerProvider.notifier).signIn())
+               ▼
+[ AuthController (AsyncNotifier) ]
+         State = AsyncLoading()
+               │ (Delegates to AuthRepository)
+               ▼
+[ AuthRepository ]
+         Validates campus email domain (.edu)
+         Authenticates against user registry
+         Emits new AppUser on authStateChanges
+               │
+               ▼
+[ appRouterProvider (GoRouter) ]
+         Detects authStateChanges has user
+         Redirect trigger: '/login' -> '/home'
+               │
+               ▼
+[ HomeScreen (Verified Student Hub) ]
+```
+
+---
+
+## 12. Interview Notes (Feature 2)
+
+### Q1: Why did you create an abstract `AuthRepository` with an in-memory implementation instead of calling `FirebaseAuth.instance` directly in widgets?
+**Answer**:
+> *"Directly calling `FirebaseAuth.instance` inside UI widgets tightly couples the presentation layer to a third-party SDK. If we need to test widgets offline, run automated unit tests in CI, or switch providers, every screen breaks. By programming to an interface (`AuthRepository`), our UI only knows about `AppUser`. The concrete implementation can be swapped from in-memory to Firebase with zero changes to any UI screen."*
+
+### Q2: How does GoRouter handle reactive authentication redirects with Riverpod?
+**Answer**:
+> *"We pass `authStateChangesProvider` into `appRouterProvider`. Whenever the stream emits a new user (login) or null (logout), GoRouter re-evaluates its `redirect` function. If an unauthenticated user tries to navigate to a protected route like `/home`, GoRouter automatically intercepts and redirects them to `/login`. When they sign in, it redirects them into `/home`."*
+
+### Q3: What is the benefit of `AsyncValue.guard()` in Riverpod?
+**Answer**:
+> *"Instead of writing repetitive `try { state = AsyncData(...) } catch (err, stack) { state = AsyncError(...) }` boilerplate in every controller method, `AsyncValue.guard()` automatically executes the asynchronous callback, catches any thrown exceptions, and cleanly populates `state.error` while setting `state.isLoading` to false."*
+
+---
+
+## 13. Next Steps
 - Await approval from user.
-- Feature 2: Authentication & User Session (Campus email validation, Riverpod Auth Repository, and Login/Register screens).
+- Feature 3: Campus Feed & Item Discovery (Lost & Found switcher, Category filtering, Search bar, and ItemCard component).

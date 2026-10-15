@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -121,14 +122,7 @@ class SplashScreen extends StatelessWidget {
                       // Action Button
                       AppButton(
                         label: 'Enter Campus Hub',
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Welcome to Finders Keepers! Next: Feature 2 (Authentication).'),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
+                        onPressed: () => context.go('/login'),
                       ),
 
                       const SizedBox(height: AppSpacing.xs),
