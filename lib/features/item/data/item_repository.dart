@@ -27,7 +27,10 @@ class InMemoryItemRepository implements ItemRepository {
       reporterId: 'user_001',
       reporterName: 'Alex Rivers',
       createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      verificationQuestionsCount: 2,
+      verificationQuestions: [
+        'What color or brand is the carrying pouch?',
+        'Is there any sticker or serial number on the headband?',
+      ],
     ),
     Item(
       id: 'item_102',
@@ -40,7 +43,10 @@ class InMemoryItemRepository implements ItemRepository {
       reporterId: 'user_002',
       reporterName: 'Taylor Morgan',
       createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-      verificationQuestionsCount: 3,
+      verificationQuestions: [
+        'What is the bank name on the debit card inside?',
+        'Describe the initials or brand logo stamped on the leather.',
+      ],
     ),
     Item(
       id: 'item_103',
@@ -53,7 +59,9 @@ class InMemoryItemRepository implements ItemRepository {
       reporterId: 'user_003',
       reporterName: 'Samira Chen',
       createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      verificationQuestionsCount: 1,
+      verificationQuestions: [
+        'What room number or code is stamped on the brass key?',
+      ],
     ),
     Item(
       id: 'item_104',
@@ -66,7 +74,9 @@ class InMemoryItemRepository implements ItemRepository {
       reporterId: 'user_001',
       reporterName: 'Alex Rivers',
       createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      verificationQuestionsCount: 2,
+      verificationQuestions: [
+        'What name or note is written on the first page?',
+      ],
     ),
     Item(
       id: 'item_105',
@@ -79,7 +89,9 @@ class InMemoryItemRepository implements ItemRepository {
       reporterId: 'user_004',
       reporterName: 'Jordan Vance',
       createdAt: DateTime.now().subtract(const Duration(hours: 9)),
-      verificationQuestionsCount: 2,
+      verificationQuestions: [
+        'What engraving or custom text appears on the case lid?',
+      ],
     ),
   ];
 
@@ -131,7 +143,7 @@ class InMemoryItemRepository implements ItemRepository {
         reporterName: old.reporterName,
         photoUrl: old.photoUrl,
         createdAt: old.createdAt,
-        verificationQuestionsCount: old.verificationQuestionsCount,
+        verificationQuestions: old.verificationQuestions,
       );
       _emit();
     }
@@ -147,4 +159,14 @@ final itemRepositoryProvider = Provider<ItemRepository>((ref) {
 final itemsStreamProvider = StreamProvider<List<Item>>((ref) {
   final repo = ref.watch(itemRepositoryProvider);
   return repo.itemsStream;
+});
+
+/// Specific item provider by ID.
+final itemByIdProvider = Provider.family<Item?, String>((ref, id) {
+  final items = ref.watch(itemsStreamProvider).value ?? [];
+  try {
+    return items.firstWhere((i) => i.id == id);
+  } catch (_) {
+    return null;
+  }
 });

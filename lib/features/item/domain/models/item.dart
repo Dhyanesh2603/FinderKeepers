@@ -29,7 +29,7 @@ class Item {
   final String reporterName;
   final String? photoUrl;
   final DateTime createdAt;
-  final int verificationQuestionsCount;
+  final List<String> verificationQuestions;
 
   const Item({
     required this.id,
@@ -43,7 +43,7 @@ class Item {
     required this.reporterName,
     this.photoUrl,
     required this.createdAt,
-    this.verificationQuestionsCount = 0,
+    this.verificationQuestions = const [],
   });
 
   factory Item.fromMap(Map<String, dynamic> map, String id) {
@@ -67,7 +67,7 @@ class Item {
       createdAt: map['createdAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int)
           : DateTime.now(),
-      verificationQuestionsCount: map['verificationQuestionsCount'] as int? ?? 0,
+      verificationQuestions: List<String>.from(map['verificationQuestions'] as List? ?? []),
     );
   }
 
@@ -83,7 +83,7 @@ class Item {
       'reporterName': reporterName,
       'photoUrl': photoUrl,
       'createdAt': createdAt.millisecondsSinceEpoch,
-      'verificationQuestionsCount': verificationQuestionsCount,
+      'verificationQuestions': verificationQuestions,
     };
   }
 }

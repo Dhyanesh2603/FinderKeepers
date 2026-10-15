@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../auth/data/auth_repository.dart';
@@ -56,6 +57,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.person_outline, size: 22),
+            tooltip: 'My Profile & Claims',
+            onPressed: () => context.go('/profile'),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout_outlined, size: 20),
             tooltip: 'Sign Out',
             onPressed: () {
@@ -73,14 +79,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           'Report Item',
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Item reporting flow will be built in Feature 4!'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        },
+        onPressed: () => context.go('/report'),
       ),
       body: SafeArea(
         child: Column(
@@ -207,16 +206,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         final item = items[index];
                         return ItemCard(
                           item: item,
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Item "${item.title}" detail view will be wired in Feature 5.',
-                                ),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          },
+                          onTap: () => context.go('/items/${item.id}'),
                         );
                       },
                     ),
