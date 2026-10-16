@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Private Documentation (Do Not Push to Git)
+*.html
+EXPLANATION.html
+DOCUMENTATION.html
+
