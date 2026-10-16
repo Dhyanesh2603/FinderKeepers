@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,7 +29,7 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
 
   final List<String> _verificationQuestions = [];
   String _selectedLocation = 'Main Library • 2nd Floor';
-  File? _selectedImage;
+  Uint8List? _selectedImageBytes;
   bool _isSubmitting = false;
 
   final List<String> _campusLocations = [
@@ -55,7 +55,8 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (picked != null) {
-      setState(() => _selectedImage = File(picked.path));
+      final bytes = await picked.readAsBytes();
+      setState(() => _selectedImageBytes = bytes);
     }
   }
 
@@ -93,7 +94,7 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
       approximateLocation: _selectedLocation,
       reporterId: currentUser?.uid ?? 'anon_user',
       reporterName: currentUser?.displayName ?? 'Campus Student',
-      photoUrl: _selectedImage?.path,
+      photoUrl: _selectedImageBytes != null ? 'attached_image' : null,
       createdAt: DateTime.now(),
       verificationQuestions: _verificationQuestions.isEmpty
           ? ['What distinctive mark or contents confirm you are the owner?']
@@ -271,12 +272,12 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
             // Image Picker Section
             const Text('Photo Attachment (Optional)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             const SizedBox(height: AppSpacing.xs),
-            if (_selectedImage != null)
+            if (_selectedImageBytes != null)
               Stack(
                 children: [
                   ClipRRect(
                     borderRadius: AppSpacing.borderRadiusMedium,
-                    child: Image.file(_selectedImage!, height: 160, width: double.infinity, fit: BoxFit.cover),
+                    child: Image.memory(_selectedImageBytes!, height: 160, width: double.infinity, fit: BoxFit.cover),
                   ),
                   Positioned(
                     top: 8,
@@ -284,7 +285,7 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
                     child: IconButton(
                       icon: const Icon(Icons.close, color: Colors.white),
                       style: IconButton.styleFrom(backgroundColor: Colors.black54),
-                      onPressed: () => setState(() => _selectedImage = null),
+                      onPressed: () => setState(() => _selectedImageBytes = null),
                     ),
                   ),
                 ],
