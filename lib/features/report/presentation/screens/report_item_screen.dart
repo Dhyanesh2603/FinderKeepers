@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -308,7 +309,11 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
         backgroundColor: AppColors.mutedGreen,
       ),
     );
-    context.go('/home');
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/home');
+    }
   }
 
   @override
@@ -317,6 +322,7 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: const Text('Report Campus Item'),
         actions: [
           if (_hasRestoredDraft ||

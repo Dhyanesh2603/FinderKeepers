@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/services/offline_service.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
@@ -43,6 +44,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: context.canPop() ? const AppBackButton() : null,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -98,7 +100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: const Icon(Icons.notifications_outlined, size: 22),
             ),
             tooltip: 'Smart Match Alerts',
-            onPressed: () => context.go('/notifications'),
+            onPressed: () => context.push('/notifications'),
           ),
           // Campus Map Explorer Toggle
           IconButton(
@@ -114,13 +116,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.admin_panel_settings_outlined, size: 22),
             tooltip: 'Campus Security & Admin',
-            onPressed: () => context.go('/admin'),
+            onPressed: () => context.push('/admin'),
           ),
           // Profile & Claims
           IconButton(
             icon: const Icon(Icons.person_outline, size: 22),
             tooltip: 'My Profile & Claims',
-            onPressed: () => context.go('/profile'),
+            onPressed: () => context.push('/profile'),
           ),
           IconButton(
             icon: const Icon(Icons.logout_outlined, size: 20),
@@ -140,7 +142,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           'Report Item',
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
-        onPressed: () => context.go('/report'),
+        onPressed: () => context.push('/report'),
       ),
       body: SafeArea(
         child: Column(
@@ -344,7 +346,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           final item = items[index];
                           return ItemCard(
                             item: item,
-                            onTap: () => context.go('/items/${item.id}'),
+                            onTap: () => context.push('/items/${item.id}'),
                           );
                         },
                       ),
@@ -500,7 +502,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Report Lost or Found Item', style: TextStyle(fontWeight: FontWeight.w600)),
-              onPressed: () => context.go('/report'),
+              onPressed: () => context.push('/report'),
             ),
           ],
         ),

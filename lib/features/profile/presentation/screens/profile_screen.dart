@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../auth/data/auth_repository.dart';
@@ -65,15 +66,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Student Profile & Activity'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/home'),
-        ),
+        leading: const AppBackButton(),
         actions: [
           IconButton(
             icon: const Icon(Icons.post_add_rounded),
             tooltip: 'Report Item',
-            onPressed: () => context.go('/report'),
+            onPressed: () => context.push('/report'),
           ),
         ],
       ),
@@ -328,7 +326,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ElevatedButton.icon(
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Report a Lost Item'),
-                onPressed: () => context.go('/report'),
+                onPressed: () => context.push('/report'),
               ),
             ],
           ),
@@ -345,7 +343,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         final isReunited = item.status == ItemStatus.reunited;
 
         return AppCard(
-          onTap: () => context.go('/items/${item.id}'),
+          onTap: () => context.push('/items/${item.id}'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -418,7 +416,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     ),
                     icon: const Icon(Icons.remove_red_eye_outlined, size: 14),
                     label: const Text('View Listing', style: TextStyle(fontSize: 12)),
-                    onPressed: () => context.go('/items/${item.id}'),
+                    onPressed: () => context.push('/items/${item.id}'),
                   ),
                 ],
               ),
@@ -450,7 +448,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ElevatedButton.icon(
                 icon: const Icon(Icons.add, size: 16),
                 label: const Text('Report a Found Item'),
-                onPressed: () => context.go('/report'),
+                onPressed: () => context.push('/report'),
               ),
             ],
           ),
@@ -468,7 +466,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         final itemClaims = allClaims.where((c) => c.itemId == item.id).toList();
 
         return AppCard(
-          onTap: () => context.go('/items/${item.id}'),
+          onTap: () => context.push('/items/${item.id}'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -567,7 +565,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           ),
                           icon: const Icon(Icons.how_to_reg_outlined, size: 14),
                           label: Text('Review Claims (${itemClaims.length})', style: const TextStyle(fontSize: 11)),
-                          onPressed: () => context.go('/items/${item.id}/claims'),
+                          onPressed: () => context.push('/items/${item.id}/claims'),
                         ),
                       if (itemClaims.isEmpty)
                         OutlinedButton.icon(
@@ -577,7 +575,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           ),
                           icon: const Icon(Icons.remove_red_eye_outlined, size: 14),
                           label: const Text('View Listing', style: TextStyle(fontSize: 12)),
-                          onPressed: () => context.go('/items/${item.id}'),
+                          onPressed: () => context.push('/items/${item.id}'),
                         ),
                     ],
                   ),
@@ -611,7 +609,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ElevatedButton.icon(
                 icon: const Icon(Icons.explore_outlined, size: 16),
                 label: const Text('Browse Campus Feed'),
-                onPressed: () => context.go('/home'),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/home');
+                  }
+                },
               ),
             ],
           ),
@@ -639,7 +643,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         }
 
         return AppCard(
-          onTap: () => context.go('/items/${claim.itemId}'),
+          onTap: () => context.push('/items/${claim.itemId}'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -688,7 +692,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     ),
                     icon: const Icon(Icons.remove_red_eye_outlined, size: 14),
                     label: const Text('View Item', style: TextStyle(fontSize: 12)),
-                    onPressed: () => context.go('/items/${claim.itemId}'),
+                    onPressed: () => context.push('/items/${claim.itemId}'),
                   ),
                   if (isApproved) ...[
                     const SizedBox(width: 8),
@@ -701,7 +705,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       ),
                       icon: const Icon(Icons.chat_bubble_outline, size: 14),
                       label: const Text('Handover Chat', style: TextStyle(fontSize: 12)),
-                      onPressed: () => context.go('/chat/${claim.id}'),
+                      onPressed: () => context.push('/chat/${claim.id}'),
                     ),
                   ],
                 ],
