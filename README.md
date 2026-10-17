@@ -1,12 +1,15 @@
 # Finders Keepers 🔍 — Campus Lost & Found Platform
 
-[![Download Android APK](https://img.shields.io/badge/Download_APK-Finders_Keepers_v1.0.0-2E7D52?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Dhyanesh2603/FinderKeepers/releases/download/v1.0.0/app-debug.apk)
+[![Download Release APK](https://img.shields.io/badge/Download_Release_APK-v1.0.0_(50MB)-2E7D52?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Dhyanesh2603/FinderKeepers/releases/download/v1.0.0/app-release.apk)
+[![Download Debug APK](https://img.shields.io/badge/Download_Debug_APK-v1.0.0_(187MB)-14171A?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Dhyanesh2603/FinderKeepers/releases/download/v1.0.0/app-debug.apk)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Dhyanesh2603%2FFinderKeepers-181717?style=for-the-badge&logo=github)](https://github.com/Dhyanesh2603/FinderKeepers)
 [![Tests Passing](https://img.shields.io/badge/Tests-24%20Passing-2E7D52?style=for-the-badge&logo=flutter)](https://github.com/Dhyanesh2603/FinderKeepers)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
-### 📲 [📥 Direct Android APK Download (v1.0.0)](https://github.com/Dhyanesh2603/FinderKeepers/releases/download/v1.0.0/app-debug.apk)
-> **Instant Deliverable Installation**: Tap the download badge or [click here to download `app-debug.apk`](https://github.com/Dhyanesh2603/FinderKeepers/releases/download/v1.0.0/app-debug.apk) to install and run the standalone application immediately on any physical Android device or emulator without needing to build from source.
+### 📲 Standalone Android APK Deliverables
+- 🚀 **[📥 Download Release APK (`app-release.apk` — 50.1 MB)](https://github.com/Dhyanesh2603/FinderKeepers/releases/download/v1.0.0/app-release.apk)** *(Recommended: Optimized with R8 code shrinking and icon tree-shaking)*
+- 🛠️ **[📥 Download Debug APK (`app-debug.apk` — 187 MB)](https://github.com/Dhyanesh2603/FinderKeepers/releases/download/v1.0.0/app-debug.apk)** *(Includes all architectures and developer logging)*
+
+> **Installation Instructions**: Tap either link above to download the APK directly to your physical Android device or emulator. Open the `.apk` file and tap **Install** to test the full campus lost-and-found mobile experience without needing to compile code from source.
 
 ---
 
