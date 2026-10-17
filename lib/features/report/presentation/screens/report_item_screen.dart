@@ -170,8 +170,8 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
       approximateLocation: _selectedLocation,
       latitude: _taggedLat,
       longitude: _taggedLng,
-      reporterId: currentUser?.uid ?? 'anon_user',
-      reporterName: currentUser?.displayName ?? 'Campus Student',
+      reporterId: currentUser?.uid ?? 'user_001',
+      reporterName: currentUser?.displayName ?? 'Alex Rivers',
       photoUrl: _selectedImageBytes != null ? 'attached_image' : null,
       createdAt: DateTime.now(),
       verificationQuestions: _verificationQuestions.isEmpty

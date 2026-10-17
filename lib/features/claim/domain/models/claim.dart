@@ -45,6 +45,7 @@ class Claim {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'itemId': itemId,
       'itemTitle': itemTitle,
       'claimantId': claimantId,
@@ -55,4 +56,9 @@ class Claim {
       'createdAt': createdAt.millisecondsSinceEpoch,
     };
   }
+
+  Map<String, dynamic> toJson() => toMap();
+
+  factory Claim.fromJson(Map<String, dynamic> json) =>
+      Claim.fromMap(json, json['id'] as String? ?? '');
 }

@@ -31,6 +31,10 @@ abstract class AppColors {
   static const Color mutedRed = Color(0xFFB83A3A);
   static const Color mutedRedLight = Color(0xFFFCEBEB);
 
+  // Muted Blue: Claims / Discovery / Map Navigation
+  static const Color mutedBlue = Color(0xFF2563EB);
+  static const Color mutedBlueLight = Color(0xFFEFF6FF);
+
   // Text Hierarchy
   static const Color textPrimaryLight = Color(0xFF111827);
   static const Color textSecondaryLight = Color(0xFF6B7280);

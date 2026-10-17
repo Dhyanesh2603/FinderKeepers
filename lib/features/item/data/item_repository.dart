@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/models/item.dart';
 
 /// Abstract contract for querying and reporting items.
@@ -11,8 +13,9 @@ abstract class ItemRepository {
   Future<void> updateItemStatus(String id, ItemStatus status);
 }
 
-/// In-memory implementation pre-loaded with realistic campus data.
+/// In-memory implementation pre-loaded with realistic campus data and backed by SharedPreferences persistence.
 class InMemoryItemRepository implements ItemRepository {
+  static const String _persistedItemsKey = 'finders_keepers_persisted_items';
   final _controller = StreamController<List<Item>>.broadcast();
 
   final List<Item> _items = [
@@ -107,10 +110,42 @@ class InMemoryItemRepository implements ItemRepository {
 
   InMemoryItemRepository() {
     _emit();
+    _loadFromStorage();
   }
 
   void _emit() {
     _controller.add(List.unmodifiable(_items));
+  }
+
+  Future<void> _loadFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_persistedItemsKey);
+      if (raw != null) {
+        final List decoded = jsonDecode(raw);
+        final loadedItems = decoded
+            .map((e) => Item.fromJson(e as Map<String, dynamic>))
+            .toList();
+
+        for (final item in loadedItems.reversed) {
+          final existingIdx = _items.indexWhere((i) => i.id == item.id);
+          if (existingIdx != -1) {
+            _items[existingIdx] = item;
+          } else {
+            _items.insert(0, item);
+          }
+        }
+        _emit();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final encoded = jsonEncode(_items.map((i) => i.toJson()).toList());
+      await prefs.setString(_persistedItemsKey, encoded);
+    } catch (_) {}
   }
 
   @override
@@ -134,6 +169,7 @@ class InMemoryItemRepository implements ItemRepository {
   Future<void> addItem(Item item) async {
     _items.insert(0, item);
     _emit();
+    await _saveToStorage();
   }
 
   @override
@@ -158,9 +194,11 @@ class InMemoryItemRepository implements ItemRepository {
         verificationQuestions: old.verificationQuestions,
       );
       _emit();
+      await _saveToStorage();
     }
   }
 }
+
 
 /// Global repository provider.
 final itemRepositoryProvider = Provider<ItemRepository>((ref) {
