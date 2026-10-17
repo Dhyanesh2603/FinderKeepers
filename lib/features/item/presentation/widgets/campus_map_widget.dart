@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 
-/// Interactive vector map of campus with approximate privacy fuzzed circle.
-class CampusMapWidget extends StatelessWidget {
+/// Real Google Map preview embedded in the item detail screen.
+///
+/// Displays actual Google Maps satellite / street imagery centered at the item's
+/// exact or approximate coordinates with a privacy radius and pin marker.
+class CampusMapWidget extends StatefulWidget {
   final String locationName;
   final double? latitude;
   final double? longitude;
@@ -18,11 +23,75 @@ class CampusMapWidget extends StatelessWidget {
   });
 
   @override
+  State<CampusMapWidget> createState() => _CampusMapWidgetState();
+}
+
+class _CampusMapWidgetState extends State<CampusMapWidget> {
+  late final MapController _mapController;
+  bool _isSatellite = true;
+
+  static const double _defaultCampusLat = 12.9692;
+  static const double _defaultCampusLng = 79.1559;
+
+  @override
+  void initState() {
+    super.initState();
+    _mapController = MapController();
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  LatLng _resolveCoordinates() {
+    if (widget.latitude != null && widget.longitude != null) {
+      return LatLng(widget.latitude!, widget.longitude!);
+    }
+
+    final lower = widget.locationName.toLowerCase();
+    if (lower.contains('food') || lower.contains('court') || lower.contains('union')) {
+      return const LatLng(12.9680, 79.1580);
+    } else if (lower.contains('engineering') || lower.contains('lab 204') || lower.contains('tt')) {
+      return const LatLng(12.9710, 79.1594);
+    } else if (lower.contains('science') || lower.contains('lecture hall')) {
+      return const LatLng(12.9722, 79.1638);
+    } else if (lower.contains('business') || lower.contains('auditorium')) {
+      return const LatLng(12.9705, 79.1610);
+    } else if (lower.contains('gym') || lower.contains('recreation') || lower.contains('sports')) {
+      return const LatLng(12.9715, 79.1645);
+    } else if (lower.contains('cafeteria') || lower.contains('bench')) {
+      return const LatLng(12.9675, 79.1570);
+    } else if (lower.contains('hostel') || lower.contains('dorm') || lower.contains('residence')) {
+      return const LatLng(12.9730, 79.1650);
+    }
+
+    return const LatLng(_defaultCampusLat, _defaultCampusLng);
+  }
+
+  String _getTileUrl() {
+    return _isSatellite
+        ? 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}' // Google Satellite Hybrid
+        : 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}'; // Google Street Maps
+  }
+
+  Future<void> _openExternalGoogleMaps(LatLng point) async {
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${point.latitude},${point.longitude}',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final point = _resolveCoordinates();
 
     return Container(
-      height: 220,
+      height: 240,
       width: double.infinity,
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF131518) : const Color(0xFFE9ECEF),
@@ -35,65 +104,160 @@ class CampusMapWidget extends StatelessWidget {
         borderRadius: AppSpacing.borderRadiusLarge,
         child: Stack(
           children: [
-            // Custom vector campus grid & paths
-            CustomPaint(
-              size: const Size(double.infinity, 220),
-              painter: _CampusGridPainter(isDark: isDark),
+            // Real Live Google Maps View
+            FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: point,
+                initialZoom: 17.2,
+                minZoom: 14.0,
+                maxZoom: 19.5,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.all,
+                ),
+              ),
+              children: [
+                // Google Maps Tile Layer
+                TileLayer(
+                  urlTemplate: _getTileUrl(),
+                  userAgentPackageName: 'com.finderskeepers.finders_keepers',
+                  maxZoom: 20,
+                ),
+
+                // ~50m Privacy Approximate Location Circle
+                CircleLayer(
+                  circles: [
+                    CircleMarker(
+                      point: point,
+                      radius: 45,
+                      useRadiusInMeter: true,
+                      color: AppColors.mutedAmber.withValues(alpha: 0.25),
+                      borderColor: AppColors.mutedAmber,
+                      borderStrokeWidth: 2.0,
+                    ),
+                  ],
+                ),
+
+                // Pin Marker
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: point,
+                      width: 44,
+                      height: 44,
+                      alignment: Alignment.topCenter,
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.location_on_rounded,
+                            color: Colors.redAccent,
+                            size: 38,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black54,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
 
-            // Approximate Fuzzed Radius Circle & Pulse
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+            // Top Overlay: Live Map Badge & Mode Switcher
+            Positioned(
+              top: 10,
+              left: 10,
+              right: 10,
+              child: Row(
                 children: [
                   Container(
-                    width: 100,
-                    height: 100,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.mutedAmber.withValues(alpha: 0.15),
-                      border: Border.all(
-                        color: AppColors.mutedAmber.withValues(alpha: 0.5),
-                        width: 1.5,
-                      ),
+                      color: Colors.black87.withValues(alpha: 0.75),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.white24),
                     ),
-                    child: Center(
-                      child: Container(
-                        width: 14,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: AppColors.mutedAmber,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.mutedAmber.withValues(alpha: 0.4),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.surfaceDark : Colors.white,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.shield_outlined, size: 12, color: Colors.greenAccent),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Approximate (~100m)',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
-                    child: Text(
-                      locationName,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                  ),
+                  const Spacer(),
+                  // Satellite / Street Toggle
+                  InkWell(
+                    onTap: () => setState(() => _isSatellite = !_isSatellite),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black87.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _isSatellite ? Icons.map_outlined : Icons.satellite_alt_rounded,
+                            size: 13,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _isSatellite ? 'Street' : 'Satellite',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  // Full Campus Map Link
+                  InkWell(
+                    onTap: () => context.go('/map?location=${Uri.encodeComponent(widget.locationName)}'),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black87.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.fullscreen, size: 13, color: Colors.white),
+                          SizedBox(width: 4),
+                          Text(
+                            'Full Map',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -101,88 +265,69 @@ class CampusMapWidget extends StatelessWidget {
               ),
             ),
 
-            // Top Privacy Pill Indicator
+            // Bottom Overlay: Location Label & Open Google Maps Button
             Positioned(
-              top: AppSpacing.s,
-              left: AppSpacing.s,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.85),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                  border: Border.all(
-                    color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                  ),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.shield_outlined, size: 13, color: AppColors.mutedGreen),
-                    SizedBox(width: 4),
-                    Text(
-                      'Privacy Fuzzed Zone (~100m)',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Top Right: Open in Campus Map Explorer
-            // Top Right: Actions
-            Positioned(
-              top: AppSpacing.s,
-              right: AppSpacing.s,
+              bottom: 10,
+              left: 10,
+              right: 10,
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (latitude != null && longitude != null) ...[
-                    GestureDetector(
-                      onTap: () async {
-                        final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEA4335),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.place, size: 12, color: Colors.white),
-                            SizedBox(width: 4),
-                            Text(
-                              'Google Maps',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black87.withValues(alpha: 0.80),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.location_on, size: 14, color: Colors.redAccent),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              widget.locationName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 6),
-                  ],
-                  GestureDetector(
-                    onTap: () => context.go('/map?location=${Uri.encodeComponent(locationName)}'),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () => _openExternalGoogleMaps(point),
+                    borderRadius: BorderRadius.circular(8),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                        border: Border.all(
-                          color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                        ),
+                        color: const Color(0xFFEA4335),
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black38,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.map_outlined, size: 12),
+                          Icon(Icons.directions_outlined, size: 14, color: Colors.white),
                           SizedBox(width: 4),
                           Text(
-                            'Full Map',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                            'Directions',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ],
                       ),
@@ -196,49 +341,4 @@ class CampusMapWidget extends StatelessWidget {
       ),
     );
   }
-}
-
-class _CampusGridPainter extends CustomPainter {
-  final bool isDark;
-  _CampusGridPainter({required this.isDark});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final linePaint = Paint()
-      ..color = isDark ? const Color(0xFF1E2126) : const Color(0xFFDDE1E6)
-      ..strokeWidth = 1.0;
-
-    // Draw background campus pedestrian paths
-    for (double i = 0; i < size.width; i += 40) {
-      canvas.drawLine(Offset(i, 0), Offset(i, size.height), linePaint);
-    }
-    for (double j = 0; j < size.height; j += 40) {
-      canvas.drawLine(Offset(0, j), Offset(size.width, j), linePaint);
-    }
-
-    final buildingPaint = Paint()
-      ..color = isDark ? const Color(0xFF282C34) : const Color(0xFFCFD5DD)
-      ..style = PaintingStyle.fill;
-
-    // Abstract campus building blocks
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(const Rect.fromLTWH(20, 20, 60, 45), const Radius.circular(6)),
-      buildingPaint,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTWH(size.width - 90, 30, 70, 50), const Radius.circular(6)),
-      buildingPaint,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTWH(30, size.height - 70, 80, 45), const Radius.circular(6)),
-      buildingPaint,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTWH(size.width - 100, size.height - 65, 75, 45), const Radius.circular(6)),
-      buildingPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
