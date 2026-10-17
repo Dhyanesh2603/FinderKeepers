@@ -39,7 +39,6 @@ class CategoryFilterChips extends ConsumerWidget {
 
           return Material(
             color: backgroundColor,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
               side: BorderSide(color: borderColor, width: 1.0),

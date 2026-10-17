@@ -11,6 +11,7 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../item/data/item_repository.dart';
 import '../../../item/domain/models/item.dart';
+import '../../../../core/services/offline_service.dart';
 
 /// Form screen allowing students to report lost or found items with photo and secret questions.
 class ReportItemScreen extends ConsumerStatefulWidget {
@@ -44,7 +45,54 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _checkAndRestoreDraft();
+  }
+
+  Future<void> _checkAndRestoreDraft() async {
+    final draft = await OfflineService.loadDraft();
+    if (draft != null && mounted) {
+      setState(() {
+        _titleController.text = draft['title'] as String? ?? '';
+        _descriptionController.text = draft['description'] as String? ?? '';
+        if (draft['location'] != null) _selectedLocation = draft['location'] as String;
+        if (draft['type'] != null) {
+          _type = draft['type'] == 'lost' ? ItemType.lost : ItemType.found;
+        }
+        if (draft['category'] != null) {
+          _category = ItemCategory.values.firstWhere(
+            (e) => e.name == draft['category'],
+            orElse: () => ItemCategory.electronics,
+          );
+        }
+        if (draft['questions'] is List) {
+          _verificationQuestions.addAll(List<String>.from(draft['questions'] as List));
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Restored unsaved report draft.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _persistDraft() {
+    OfflineService.saveDraft(
+      title: _titleController.text,
+      description: _descriptionController.text,
+      type: _type.name,
+      category: _category.name,
+      location: _selectedLocation,
+      questions: _verificationQuestions,
+    );
+  }
+
+  @override
   void dispose() {
+    _persistDraft();
     _titleController.dispose();
     _descriptionController.dispose();
     _questionController.dispose();
@@ -67,6 +115,7 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
         _verificationQuestions.add(text);
         _questionController.clear();
       });
+      _persistDraft();
     }
   }
 
@@ -84,6 +133,8 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
     setState(() => _isSubmitting = true);
 
     final currentUser = ref.read(currentUserProvider);
+    final isOffline = ref.read(isOfflineModeProvider);
+
     final newItem = Item(
       id: 'item_${DateTime.now().millisecondsSinceEpoch}',
       title: title,
@@ -101,14 +152,20 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
           : _verificationQuestions,
     );
 
+    if (isOffline) {
+      await OfflineService.enqueueOfflineReport(newItem);
+    }
     await ref.read(itemRepositoryProvider).addItem(newItem);
+    await OfflineService.clearDraft();
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Report published for "${newItem.title}"!'),
+        content: Text(isOffline
+            ? 'Saved to offline queue. Will auto-sync when online.'
+            : 'Report published for "${newItem.title}"!'),
         backgroundColor: AppColors.mutedGreen,
       ),
     );

@@ -86,4 +86,12 @@ class Item {
       'verificationQuestions': verificationQuestions,
     };
   }
+
+  Map<String, dynamic> toJson() => {
+        ...toMap(),
+        'id': id,
+      };
+
+  factory Item.fromJson(Map<String, dynamic> json) =>
+      Item.fromMap(json, json['id'] as String? ?? '');
 }

@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/services/offline_service.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../item/data/item_repository.dart';
 import '../../../item/domain/models/item.dart';
+import '../../../notifications/data/match_engine.dart';
 import '../controllers/feed_controller.dart';
 import '../widgets/category_filter_chips.dart';
 import '../widgets/item_card.dart';
@@ -32,6 +35,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final user = ref.watch(currentUserProvider);
     final items = ref.watch(filteredItemsProvider);
     final selectedType = ref.watch(selectedTypeFilterProvider);
+    final isOffline = ref.watch(isOfflineModeProvider);
+    final matches = ref.watch(matchRecommendationsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -56,6 +61,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
         actions: [
+          // Offline / Online Mode Toggle Simulator
+          IconButton(
+            icon: Icon(
+              isOffline ? Icons.wifi_off : Icons.wifi,
+              size: 20,
+              color: isOffline ? Colors.orangeAccent : AppColors.mutedGreen,
+            ),
+            tooltip: isOffline ? 'Offline Mode Active' : 'Online Mode Active',
+            onPressed: () async {
+              ref.read(isOfflineModeProvider.notifier).toggle();
+              final nowOffline = ref.read(isOfflineModeProvider);
+              if (!nowOffline) {
+                final queued = await OfflineService.drainOfflineQueue();
+                for (final item in queued) {
+                  await ref.read(itemRepositoryProvider).addItem(item);
+                }
+                if (context.mounted && queued.isNotEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Auto-synced ${queued.length} offline report(s)!'),
+                      backgroundColor: AppColors.mutedGreen,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+          // Smart Match Alerts Button
+          IconButton(
+            icon: Badge(
+              isLabelVisible: matches.isNotEmpty,
+              label: Text('${matches.length}'),
+              child: const Icon(Icons.notifications_outlined, size: 22),
+            ),
+            tooltip: 'Smart Match Alerts',
+            onPressed: () => context.go('/notifications'),
+          ),
+          // Campus Security Admin Console
+          IconButton(
+            icon: const Icon(Icons.admin_panel_settings_outlined, size: 22),
+            tooltip: 'Campus Security & Admin',
+            onPressed: () => context.go('/admin'),
+          ),
+          // Profile & Claims
           IconButton(
             icon: const Icon(Icons.person_outline, size: 22),
             tooltip: 'My Profile & Claims',
@@ -85,6 +134,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Offline Warning & Sync Banner
+            if (isOffline)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.m, vertical: 8),
+                color: Colors.orangeAccent.withValues(alpha: 0.15),
+                child: Row(
+                  children: [
+                    const Icon(Icons.cloud_off, size: 16, color: Colors.orangeAccent),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Offline Mode Active • Drafts & reports queue locally',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.orangeAccent),
+                      ),
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+                      onPressed: () async {
+                        ref.read(isOfflineModeProvider.notifier).setOffline(false);
+                        final queued = await OfflineService.drainOfflineQueue();
+                        for (final item in queued) {
+                          await ref.read(itemRepositoryProvider).addItem(item);
+                        }
+                        if (context.mounted && queued.isNotEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Auto-synced ${queued.length} offline report(s)!'),
+                              backgroundColor: AppColors.mutedGreen,
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text('Go Online', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ),
+              ),
             // Search Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
