@@ -11,6 +11,7 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../item/data/item_repository.dart';
 import '../../../item/domain/models/item.dart';
+import '../../../item/presentation/widgets/google_map_tagger_widget.dart';
 import '../../../../core/services/offline_service.dart';
 
 /// Form screen allowing students to report lost or found items with photo and secret questions.
@@ -30,6 +31,8 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
 
   final List<String> _verificationQuestions = [];
   String _selectedLocation = 'Main Library • 2nd Floor';
+  double? _taggedLat;
+  double? _taggedLng;
   Uint8List? _selectedImageBytes;
   bool _isSubmitting = false;
 
@@ -119,6 +122,28 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
     }
   }
 
+  Future<void> _openGoogleMapTagger() async {
+    final result = await showModalBottomSheet<TaggedLocationResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => GoogleMapTaggerWidget(
+        initialLat: _taggedLat,
+        initialLng: _taggedLng,
+        initialLocationName: _selectedLocation,
+      ),
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _taggedLat = result.latitude;
+        _taggedLng = result.longitude;
+        _selectedLocation = result.locationName;
+      });
+      _persistDraft();
+    }
+  }
+
   Future<void> _submitReport() async {
     final title = _titleController.text.trim();
     final description = _descriptionController.text.trim();
@@ -143,6 +168,8 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
       status: ItemStatus.open,
       category: _category,
       approximateLocation: _selectedLocation,
+      latitude: _taggedLat,
+      longitude: _taggedLng,
       reporterId: currentUser?.uid ?? 'anon_user',
       reporterName: currentUser?.displayName ?? 'Campus Student',
       photoUrl: _selectedImageBytes != null ? 'attached_image' : null,
@@ -314,6 +341,111 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
                 ),
               ),
             ),
+
+            const SizedBox(height: AppSpacing.s),
+
+            // Google Map Tagging Action Card
+            if (_taggedLat == null)
+              InkWell(
+                onTap: _openGoogleMapTagger,
+                borderRadius: AppSpacing.borderRadiusMedium,
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.m),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.surfaceVariantDark : Colors.white,
+                    borderRadius: AppSpacing.borderRadiusMedium,
+                    border: Border.all(
+                      color: const Color(0xFF4285F4).withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEA4335).withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.add_location_alt, color: Color(0xFFEA4335), size: 22),
+                      ),
+                      const SizedBox(width: AppSpacing.m),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Text(
+                                  'Tag Location on Google Map',
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  'PIN DROP',
+                                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF4285F4)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Drop a pin on the campus map so the owner knows exactly where you found it.',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.m),
+                decoration: BoxDecoration(
+                  color: AppColors.mutedGreenLight,
+                  borderRadius: AppSpacing.borderRadiusMedium,
+                  border: Border.all(color: AppColors.mutedGreen, width: 1.5),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: AppColors.mutedGreen, size: 24),
+                    const SizedBox(width: AppSpacing.m),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Location Tagged on Google Map ✓',
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF14532D)),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '$_selectedLocation • (${_taggedLat!.toStringAsFixed(4)}° N, ${_taggedLng!.toStringAsFixed(4)}° E)',
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF166534), fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                      onPressed: _openGoogleMapTagger,
+                      child: const Text('Change Pin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ),
+              ),
 
             const SizedBox(height: AppSpacing.l),
 

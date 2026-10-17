@@ -25,6 +25,8 @@ class Item {
   final ItemStatus status;
   final ItemCategory category;
   final String approximateLocation;
+  final double? latitude;
+  final double? longitude;
   final String reporterId;
   final String reporterName;
   final String? photoUrl;
@@ -39,6 +41,8 @@ class Item {
     required this.status,
     required this.category,
     required this.approximateLocation,
+    this.latitude,
+    this.longitude,
     required this.reporterId,
     required this.reporterName,
     this.photoUrl,
@@ -61,6 +65,8 @@ class Item {
         orElse: () => ItemCategory.other,
       ),
       approximateLocation: map['approximateLocation'] as String? ?? 'Campus Area',
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
       reporterId: map['reporterId'] as String? ?? '',
       reporterName: map['reporterName'] as String? ?? 'Campus Member',
       photoUrl: map['photoUrl'] as String?,
@@ -79,6 +85,8 @@ class Item {
       'status': status.name,
       'category': category.name,
       'approximateLocation': approximateLocation,
+      'latitude': latitude,
+      'longitude': longitude,
       'reporterId': reporterId,
       'reporterName': reporterName,
       'photoUrl': photoUrl,

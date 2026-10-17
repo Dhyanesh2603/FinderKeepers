@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 
 /// Interactive vector map of campus with approximate privacy fuzzed circle.
 class CampusMapWidget extends StatelessWidget {
   final String locationName;
+  final double? latitude;
+  final double? longitude;
 
   const CampusMapWidget({
     super.key,
     required this.locationName,
+    this.latitude,
+    this.longitude,
   });
 
   @override
@@ -124,32 +129,66 @@ class CampusMapWidget extends StatelessWidget {
             ),
 
             // Top Right: Open in Campus Map Explorer
+            // Top Right: Actions
             Positioned(
               top: AppSpacing.s,
               right: AppSpacing.s,
-              child: GestureDetector(
-                onTap: () => context.go('/map?location=${Uri.encodeComponent(locationName)}'),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.85),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
-                    border: Border.all(
-                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (latitude != null && longitude != null) ...[
+                    GestureDetector(
+                      onTap: () async {
+                        final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEA4335),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.place, size: 12, color: Colors.white),
+                            SizedBox(width: 4),
+                            Text(
+                              'Google Maps',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  GestureDetector(
+                    onTap: () => context.go('/map?location=${Uri.encodeComponent(locationName)}'),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                        border: Border.all(
+                          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.map_outlined, size: 12),
+                          SizedBox(width: 4),
+                          Text(
+                            'Full Map',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.map_outlined, size: 12),
-                      SizedBox(width: 4),
-                      Text(
-                        'Full Map',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ),
             ),
           ],

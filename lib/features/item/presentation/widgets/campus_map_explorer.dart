@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../data/item_repository.dart';
@@ -802,6 +803,19 @@ class _CampusMapExplorerWidgetState extends ConsumerState<CampusMapExplorerWidge
                               ],
                             ),
                           ),
+                          if (item.latitude != null && item.longitude != null) ...[
+                            IconButton(
+                              icon: const Icon(Icons.place, size: 18, color: Color(0xFFEA4335)),
+                              tooltip: 'Open in Google Maps (${item.latitude!.toStringAsFixed(4)}°, ${item.longitude!.toStringAsFixed(4)}°)',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () async {
+                                final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}');
+                                await launchUrl(url, mode: LaunchMode.externalApplication);
+                              },
+                            ),
+                            const SizedBox(width: 4),
+                          ],
                           const Icon(Icons.chevron_right, size: 18),
                         ],
                       ),

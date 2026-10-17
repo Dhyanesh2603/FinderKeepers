@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -260,12 +261,65 @@ class ItemDetailScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.l),
 
             // Approximate Campus Location Map
-            const Text(
-              'Approximate Campus Location',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Approximate Campus Location',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                if (item.latitude != null && item.longitude != null)
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    icon: const Icon(Icons.open_in_new, size: 14, color: Colors.blueAccent),
+                    label: const Text(
+                      'Google Maps',
+                      style: TextStyle(fontSize: 12, color: Colors.blueAccent, fontWeight: FontWeight.w700),
+                    ),
+                    onPressed: () async {
+                      final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}');
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    },
+                  ),
+              ],
             ),
             const SizedBox(height: AppSpacing.xs),
-            CampusMapWidget(locationName: item.approximateLocation),
+            CampusMapWidget(
+              locationName: item.approximateLocation,
+              latitude: item.latitude,
+              longitude: item.longitude,
+            ),
+
+            if (item.latitude != null && item.longitude != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.surfaceVariantDark : Colors.white,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+                  border: Border.all(color: isDark ? AppColors.borderDark : AppColors.borderLight),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.place, size: 14, color: Color(0xFFEA4335)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Tagged GPS Pin: ${item.latitude!.toStringAsFixed(6)}° N, ${item.longitude!.toStringAsFixed(6)}° E',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
             const SizedBox(height: 32),
           ],
