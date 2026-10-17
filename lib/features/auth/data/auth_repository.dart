@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/models/app_user.dart';
 
 /// Abstract contract for authentication operations.
@@ -21,14 +23,18 @@ abstract class AuthRepository {
   Future<void> signOut();
 }
 
-/// In-memory implementation of AuthRepository.
+/// In-memory implementation of AuthRepository backed by persistent disk storage (SharedPreferences).
 ///
-/// Provides instant, offline-capable authentication with pre-seeded demo credentials.
+/// All registered accounts survive logouts, application restarts, and process recreation.
 class InMemoryAuthRepository implements AuthRepository {
+  static const String _persistedUsersKey = 'finders_keepers_accounts_db_v2';
+  static const String _persistedSessionKey = 'finders_keepers_session_uid_v2';
+
   final _controller = StreamController<AppUser?>.broadcast();
   AppUser? _currentUser;
+  final Completer<void> _loadCompleter = Completer<void>();
 
-  // Registered students store
+  // Registered students store (pre-seeded with demo account)
   final Map<String, (AppUser user, String password)> _users = {
     'student@campus.edu': (
       AppUser(
@@ -44,8 +50,62 @@ class InMemoryAuthRepository implements AuthRepository {
   };
 
   InMemoryAuthRepository() {
-    // Initial state: not signed in
-    _controller.add(null);
+    _loadFromStorage();
+  }
+
+  Future<void> _ensureLoaded() async {
+    if (!_loadCompleter.isCompleted) {
+      await _loadCompleter.future;
+    }
+  }
+
+  Future<void> _loadFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_persistedUsersKey);
+      if (raw != null) {
+        final Map<String, dynamic> decoded = jsonDecode(raw);
+        for (final entry in decoded.entries) {
+          final accountData = Map<String, dynamic>.from(entry.value as Map);
+          final userMap = Map<String, dynamic>.from(accountData['user'] as Map);
+          final password = accountData['password'] as String;
+          final user = AppUser.fromMap(
+            userMap,
+            userMap['uid'] as String? ?? entry.key,
+          );
+          _users[entry.key.toLowerCase()] = (user, password);
+        }
+      }
+
+      // Check for active persisted session
+      final activeEmail = prefs.getString(_persistedSessionKey);
+      if (activeEmail != null && _users.containsKey(activeEmail.toLowerCase())) {
+        _currentUser = _users[activeEmail.toLowerCase()]?.$1;
+        _controller.add(_currentUser);
+      } else {
+        _controller.add(null);
+      }
+    } catch (_) {
+      _controller.add(null);
+    } finally {
+      if (!_loadCompleter.isCompleted) {
+        _loadCompleter.complete();
+      }
+    }
+  }
+
+  Future<void> _saveToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final map = <String, dynamic>{};
+      for (final entry in _users.entries) {
+        map[entry.key] = {
+          'user': entry.value.$1.toMap(),
+          'password': entry.value.$2,
+        };
+      }
+      await prefs.setString(_persistedUsersKey, jsonEncode(map));
+    } catch (_) {}
   }
 
   @override
@@ -70,14 +130,15 @@ class InMemoryAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
+    await _ensureLoaded();
     // Simulate brief network latency
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 300));
 
     final normalizedEmail = email.trim().toLowerCase();
     final record = _users[normalizedEmail];
 
     if (record == null) {
-      throw Exception('No student account found with this email.');
+      throw Exception('No student account found with this email. Please check your credentials or register.');
     }
     if (record.$2 != password) {
       throw Exception('Invalid password. Please check your credentials.');
@@ -85,6 +146,12 @@ class InMemoryAuthRepository implements AuthRepository {
 
     _currentUser = record.$1;
     _controller.add(_currentUser);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_persistedSessionKey, normalizedEmail);
+    } catch (_) {}
+
     return _currentUser!;
   }
 
@@ -95,7 +162,8 @@ class InMemoryAuthRepository implements AuthRepository {
     required String fullName,
     required String studentId,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 600));
+    await _ensureLoaded();
+    await Future.delayed(const Duration(milliseconds: 300));
 
     final normalizedEmail = email.trim().toLowerCase();
     if (_users.containsKey(normalizedEmail)) {
@@ -117,14 +185,26 @@ class InMemoryAuthRepository implements AuthRepository {
     _users[normalizedEmail] = (newUser, password);
     _currentUser = newUser;
     _controller.add(_currentUser);
+
+    await _saveToStorage();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_persistedSessionKey, normalizedEmail);
+    } catch (_) {}
+
     return newUser;
   }
 
   @override
   Future<void> signOut() async {
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 150));
     _currentUser = null;
     _controller.add(null);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_persistedSessionKey);
+    } catch (_) {}
   }
 }
 
