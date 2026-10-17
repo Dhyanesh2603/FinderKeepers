@@ -472,23 +472,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.search_off_outlined,
-              size: 48,
+              Icons.inventory_2_outlined,
+              size: 54,
               color: isDark ? AppColors.textMutedDark : AppColors.textMutedLight,
             ),
             const SizedBox(height: AppSpacing.m),
             Text(
-              'No matching items',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16),
+              'No Campus Items Reported Yet',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.s),
             Text(
-              'Try clearing your search query or switching to "All Items".',
+              'The campus hub is fresh and ready. Found an item or lost something? Tap below to publish your report.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
                 color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
               ),
+            ),
+            const SizedBox(height: AppSpacing.l),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.mutedGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              ),
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Report Lost or Found Item', style: TextStyle(fontWeight: FontWeight.w600)),
+              onPressed: () => context.go('/report'),
             ),
           ],
         ),
