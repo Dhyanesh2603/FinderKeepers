@@ -11,29 +11,16 @@ abstract class ClaimRepository {
   Future<List<Claim>> getClaimsForStudent(String studentId);
   Future<void> submitClaim(Claim claim);
   Future<void> updateClaimStatus(String claimId, ClaimStatus status);
+  Future<void> clearAllClaims();
 }
 
-/// In-memory implementation of ClaimRepository backed by SharedPreferences persistence.
+/// In-memory implementation of ClaimRepository backed purely by SharedPreferences persistence.
+/// Starts completely empty — only claims submitted by the user are saved and tracked.
 class InMemoryClaimRepository implements ClaimRepository {
-  static const String _persistedClaimsKey = 'finders_keepers_persisted_claims';
+  static const String _persistedClaimsKey = 'finders_keepers_claims_v3';
   final _controller = StreamController<List<Claim>>.broadcast();
 
-  final List<Claim> _claims = [
-    Claim(
-      id: 'claim_501',
-      itemId: 'item_105',
-      itemTitle: 'Apple AirPods Pro in Matte Black Case',
-      claimantId: 'user_001',
-      claimantName: 'Alex Rivers',
-      claimantEmail: 'student@campus.edu',
-      answers: {
-        'What engraving or custom text appears on the case lid?':
-            'Engraved with initials "A.R." on the front lid.',
-      },
-      status: ClaimStatus.pending,
-      createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-    ),
-  ];
+  final List<Claim> _claims = [];
 
   InMemoryClaimRepository() {
     _emit();
@@ -54,14 +41,8 @@ class InMemoryClaimRepository implements ClaimRepository {
             .map((e) => Claim.fromJson(e as Map<String, dynamic>))
             .toList();
 
-        for (final claim in loadedClaims.reversed) {
-          final existingIdx = _claims.indexWhere((c) => c.id == claim.id);
-          if (existingIdx != -1) {
-            _claims[existingIdx] = claim;
-          } else {
-            _claims.insert(0, claim);
-          }
-        }
+        _claims.clear();
+        _claims.addAll(loadedClaims);
         _emit();
       }
     } catch (_) {}
@@ -115,8 +96,17 @@ class InMemoryClaimRepository implements ClaimRepository {
       await _saveToStorage();
     }
   }
-}
 
+  @override
+  Future<void> clearAllClaims() async {
+    _claims.clear();
+    _emit();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_persistedClaimsKey);
+    } catch (_) {}
+  }
+}
 
 final claimRepositoryProvider = Provider<ClaimRepository>((ref) {
   return InMemoryClaimRepository();

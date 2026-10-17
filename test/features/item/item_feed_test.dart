@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:finders_keepers/features/item/data/item_repository.dart';
 import 'package:finders_keepers/features/item/domain/models/item.dart';
 
@@ -7,14 +8,13 @@ void main() {
     late InMemoryItemRepository itemRepository;
 
     setUp(() {
+      SharedPreferences.setMockInitialValues({});
       itemRepository = InMemoryItemRepository();
     });
 
-    test('initializes with seed campus items', () async {
+    test('starts empty by default so only user reported items are stored', () async {
       final items = await itemRepository.getItems();
-      expect(items.isNotEmpty, true);
-      expect(items.any((i) => i.type == ItemType.lost), true);
-      expect(items.any((i) => i.type == ItemType.found), true);
+      expect(items.isEmpty, true);
     });
 
     test('adds new item and emits updated stream', () async {
@@ -39,9 +39,23 @@ void main() {
     });
 
     test('updates item status to reunited', () async {
-      await itemRepository.updateItemStatus('item_101', ItemStatus.reunited);
+      final newItem = Item(
+        id: 'test_item_101',
+        title: 'Sony Headphones',
+        description: 'Black headphones',
+        type: ItemType.found,
+        status: ItemStatus.open,
+        category: ItemCategory.electronics,
+        approximateLocation: 'Library',
+        reporterId: 'user_001',
+        reporterName: 'Alex',
+        createdAt: DateTime.now(),
+      );
 
-      final item = await itemRepository.getItemById('item_101');
+      await itemRepository.addItem(newItem);
+      await itemRepository.updateItemStatus('test_item_101', ItemStatus.reunited);
+
+      final item = await itemRepository.getItemById('test_item_101');
       expect(item?.status, ItemStatus.reunited);
     });
   });

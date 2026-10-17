@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:finders_keepers/features/chat/data/chat_repository.dart';
 import 'package:finders_keepers/features/chat/domain/models/chat_message.dart';
 import 'package:finders_keepers/features/claim/data/claim_repository.dart';
@@ -9,13 +10,13 @@ void main() {
     late InMemoryClaimRepository claimRepo;
 
     setUp(() {
+      SharedPreferences.setMockInitialValues({});
       claimRepo = InMemoryClaimRepository();
     });
 
-    test('initializes with seed claims for items', () async {
+    test('initializes empty by default awaiting user claims', () async {
       final claims = await claimRepo.getClaimsForItem('item_105');
-      expect(claims.isNotEmpty, true);
-      expect(claims.first.claimantId, 'user_001');
+      expect(claims.isEmpty, true);
     });
 
     test('submits new ownership claim and retrieves it by item id', () async {

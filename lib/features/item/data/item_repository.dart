@@ -11,102 +11,16 @@ abstract class ItemRepository {
   Future<Item?> getItemById(String id);
   Future<void> addItem(Item item);
   Future<void> updateItemStatus(String id, ItemStatus status);
+  Future<void> clearAllItems();
 }
 
-/// In-memory implementation pre-loaded with realistic campus data and backed by SharedPreferences persistence.
+/// In-memory implementation backed purely by SharedPreferences persistence.
+/// Starts completely empty — only items reported by the user are stored and shown.
 class InMemoryItemRepository implements ItemRepository {
-  static const String _persistedItemsKey = 'finders_keepers_persisted_items';
+  static const String _persistedItemsKey = 'finders_keepers_items_v3';
   final _controller = StreamController<List<Item>>.broadcast();
 
-  final List<Item> _items = [
-    Item(
-      id: 'item_101',
-      title: 'Sony Noise-Cancelling Headphones',
-      description: 'Black over-ear headphones found on a study desk on 3rd floor.',
-      type: ItemType.found,
-      status: ItemStatus.open,
-      category: ItemCategory.electronics,
-      approximateLocation: 'Main Library • 3rd Floor Quiet Zone',
-      latitude: 12.9692,
-      longitude: 79.1559,
-      reporterId: 'user_001',
-      reporterName: 'Alex Rivers',
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      verificationQuestions: [
-        'What color or brand is the carrying pouch?',
-        'Is there any sticker or serial number on the headband?',
-      ],
-    ),
-    Item(
-      id: 'item_102',
-      title: 'Leather Wallet with Student Card',
-      description: 'Brown bifold leather wallet lost near the food court.',
-      type: ItemType.lost,
-      status: ItemStatus.open,
-      category: ItemCategory.wallets,
-      approximateLocation: 'Student Union Building • Food Court',
-      latitude: 12.9680,
-      longitude: 79.1580,
-      reporterId: 'user_002',
-      reporterName: 'Taylor Morgan',
-      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-      verificationQuestions: [
-        'What is the bank name on the debit card inside?',
-        'Describe the initials or brand logo stamped on the leather.',
-      ],
-    ),
-    Item(
-      id: 'item_103',
-      title: 'Campus Dorm Keyring (3 keys)',
-      description: 'Keys with a blue spiral wristband and dorm tag.',
-      type: ItemType.found,
-      status: ItemStatus.open,
-      category: ItemCategory.keys,
-      approximateLocation: 'Engineering Hall • Lab 204',
-      latitude: 12.9710,
-      longitude: 79.1594,
-      reporterId: 'user_003',
-      reporterName: 'Samira Chen',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      verificationQuestions: [
-        'What room number or code is stamped on the brass key?',
-      ],
-    ),
-    Item(
-      id: 'item_104',
-      title: 'Calculus & Linear Algebra Textbook',
-      description: 'Hardcover textbook left on the bench outside lecture hall.',
-      type: ItemType.found,
-      status: ItemStatus.reunited,
-      category: ItemCategory.bagsBooks,
-      approximateLocation: 'Science Center • Lecture Hall B',
-      latitude: 12.9722,
-      longitude: 79.1638,
-      reporterId: 'user_001',
-      reporterName: 'Alex Rivers',
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      verificationQuestions: [
-        'What name or note is written on the first page?',
-      ],
-    ),
-    Item(
-      id: 'item_105',
-      title: 'Apple AirPods Pro in Matte Black Case',
-      description: 'AirPods slipped out of jacket pocket during evening lecture.',
-      type: ItemType.lost,
-      status: ItemStatus.claimPending,
-      category: ItemCategory.electronics,
-      approximateLocation: 'Business Complex • Auditorium A',
-      latitude: 12.9705,
-      longitude: 79.1610,
-      reporterId: 'user_004',
-      reporterName: 'Jordan Vance',
-      createdAt: DateTime.now().subtract(const Duration(hours: 9)),
-      verificationQuestions: [
-        'What engraving or custom text appears on the case lid?',
-      ],
-    ),
-  ];
+  final List<Item> _items = [];
 
   InMemoryItemRepository() {
     _emit();
@@ -127,14 +41,8 @@ class InMemoryItemRepository implements ItemRepository {
             .map((e) => Item.fromJson(e as Map<String, dynamic>))
             .toList();
 
-        for (final item in loadedItems.reversed) {
-          final existingIdx = _items.indexWhere((i) => i.id == item.id);
-          if (existingIdx != -1) {
-            _items[existingIdx] = item;
-          } else {
-            _items.insert(0, item);
-          }
-        }
+        _items.clear();
+        _items.addAll(loadedItems);
         _emit();
       }
     } catch (_) {}
@@ -197,8 +105,17 @@ class InMemoryItemRepository implements ItemRepository {
       await _saveToStorage();
     }
   }
-}
 
+  @override
+  Future<void> clearAllItems() async {
+    _items.clear();
+    _emit();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_persistedItemsKey);
+    } catch (_) {}
+  }
+}
 
 /// Global repository provider.
 final itemRepositoryProvider = Provider<ItemRepository>((ref) {
