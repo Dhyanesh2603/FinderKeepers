@@ -199,33 +199,106 @@ class ItemDetailScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.l),
 
             // Anti-Fraud Verification Protection Card
+            // Anti-Fraud Verification Questions Section
             AppCard(
+              padding: const EdgeInsets.all(AppSpacing.m),
               backgroundColor: isDark
                   ? AppColors.surfaceVariantDark
-                  : AppColors.mutedGreenLight.withValues(alpha: 0.5),
-              child: Row(
+                  : AppColors.mutedGreenLight.withValues(alpha: 0.4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.verified_outlined, color: AppColors.mutedGreen, size: 24),
-                  const SizedBox(width: AppSpacing.m),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Structured Ownership Verification',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  Row(
+                    children: [
+                      const Icon(Icons.verified_user_rounded, color: AppColors.mutedGreen, size: 22),
+                      const SizedBox(width: AppSpacing.s),
+                      Expanded(
+                        child: Text(
+                          'Ownership Verification Quiz (${item.verificationQuestions.length})',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${item.verificationQuestions.length} secret verification questions protect this item from fraudulent claims.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                      ),
+                      if (!isOwner && item.status != ItemStatus.reunited)
+                        InkWell(
+                          onTap: () => context.go('/items/$itemId/claim'),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.mutedGreen,
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                            ),
+                            child: const Text(
+                              'Answer',
+                              style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                            ),
                           ),
                         ),
-                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isOwner
+                        ? 'You posted these verification questions to verify genuine ownership before returning the item:'
+                        : 'To claim this item, answer the following questions posted by the finder:',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.m),
+                  if (item.verificationQuestions.isEmpty)
+                    const Text(
+                      'No custom questions posted. Standard campus proof of ownership applies.',
+                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                    )
+                  else
+                    ...item.verificationQuestions.asMap().entries.map((entry) {
+                      final qNum = entry.key + 1;
+                      final qText = entry.value;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.surfaceDark : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isDark ? AppColors.borderDark : const Color(0xFFE2E8F0),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.mutedGreen.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Q$qNum',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.mutedGreen,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                qText,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white : AppColors.textPrimaryLight,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                 ],
               ),
             ),

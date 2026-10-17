@@ -359,11 +359,13 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
 
               const SizedBox(height: AppSpacing.l),
 
-              ...item.verificationQuestions.map((question) {
+              ...item.verificationQuestions.asMap().entries.map((entry) {
+                final qNum = entry.key + 1;
+                final question = entry.value;
                 return Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.l),
                   child: AppTextField(
-                    label: question,
+                    label: 'Question $qNum: $question',
                     hintText: 'Enter your specific answer...',
                     controller: _controllers[question],
                   ),

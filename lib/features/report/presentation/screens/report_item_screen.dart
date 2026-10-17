@@ -254,6 +254,13 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
     final currentUser = ref.read(currentUserProvider);
     final isOffline = ref.read(isOfflineModeProvider);
 
+    // If the user typed a question into the input field but didn't tap '+', auto-include it
+    final pendingQuestion = _questionController.text.trim();
+    if (pendingQuestion.isNotEmpty && !_verificationQuestions.contains(pendingQuestion)) {
+      _verificationQuestions.add(pendingQuestion);
+      _questionController.clear();
+    }
+
     final newItem = Item(
       id: 'item_${DateTime.now().millisecondsSinceEpoch}',
       title: title,
@@ -430,8 +437,20 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
               children: ItemCategory.values.where((c) => c != ItemCategory.all).map((cat) {
                 final isSelected = cat == _category;
                 return ChoiceChip(
-                  label: Text(cat.label, style: const TextStyle(fontSize: 12)),
+                  label: Text(
+                    cat.label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? Colors.white
+                          : (isDark ? Colors.white70 : AppColors.textPrimaryLight),
+                    ),
+                  ),
                   selected: isSelected,
+                  selectedColor: AppColors.mutedGreen,
+                  backgroundColor: isDark ? AppColors.surfaceVariantDark : const Color(0xFFE5E7EB),
+                  showCheckmark: false,
                   onSelected: (_) {
                     setState(() => _category = cat);
                     _persistDraft();
@@ -641,6 +660,8 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
                 Expanded(
                   child: TextField(
                     controller: _questionController,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _addVerificationQuestion(),
                     decoration: const InputDecoration(
                       hintText: 'e.g. What is the lockscreen wallpaper?',
                       isDense: true,
