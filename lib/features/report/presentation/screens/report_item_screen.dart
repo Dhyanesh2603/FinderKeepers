@@ -47,35 +47,101 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
     'Central Cafeteria Bench',
   ];
 
+  bool _isSubmitted = false;
+  bool _isRestoringDraft = true;
+  bool _hasRestoredDraft = false;
+
   @override
   void initState() {
     super.initState();
+    _titleController.addListener(_onFieldChanged);
+    _descriptionController.addListener(_onFieldChanged);
     _checkAndRestoreDraft();
   }
 
+  void _onFieldChanged() {
+    _persistDraft();
+  }
+
   Future<void> _checkAndRestoreDraft() async {
+    _isRestoringDraft = true;
     final draft = await OfflineService.loadDraft();
     if (draft != null && mounted) {
+      final draftTitle = draft['title'] as String? ?? '';
+      final draftDesc = draft['description'] as String? ?? '';
+      final draftLocation = draft['location'] as String?;
+      final draftQuestions = draft['questions'] is List
+          ? List<String>.from(draft['questions'] as List)
+          : <String>[];
+      final draftLat = (draft['latitude'] as num?)?.toDouble();
+      final draftLng = (draft['longitude'] as num?)?.toDouble();
+
+      // Only restore if there's actual user content
+      if (draftTitle.isNotEmpty ||
+          draftDesc.isNotEmpty ||
+          draftQuestions.isNotEmpty ||
+          draftLat != null) {
+        setState(() {
+          _hasRestoredDraft = true;
+          _titleController.text = draftTitle;
+          _descriptionController.text = draftDesc;
+          if (draftLocation != null && draftLocation.isNotEmpty) {
+            _selectedLocation = draftLocation;
+            if (!_campusLocations.contains(draftLocation)) {
+              _campusLocations.insert(0, draftLocation);
+            }
+          }
+          if (draft['type'] != null) {
+            _type = draft['type'] == 'lost' ? ItemType.lost : ItemType.found;
+          }
+          if (draft['category'] != null) {
+            _category = ItemCategory.values.firstWhere(
+              (e) => e.name == draft['category'],
+              orElse: () => ItemCategory.electronics,
+            );
+          }
+          if (draftQuestions.isNotEmpty) {
+            _verificationQuestions.clear();
+            _verificationQuestions.addAll(draftQuestions);
+          }
+          if (draftLat != null && draftLng != null) {
+            _taggedLat = draftLat;
+            _taggedLng = draftLng;
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Restored unsaved report draft.'),
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: 'Clear Draft',
+              textColor: Colors.amberAccent,
+              onPressed: _discardDraft,
+            ),
+          ),
+        );
+      }
+    }
+    _isRestoringDraft = false;
+  }
+
+  Future<void> _discardDraft() async {
+    await OfflineService.clearDraft();
+    if (mounted) {
       setState(() {
-        _titleController.text = draft['title'] as String? ?? '';
-        _descriptionController.text = draft['description'] as String? ?? '';
-        if (draft['location'] != null) _selectedLocation = draft['location'] as String;
-        if (draft['type'] != null) {
-          _type = draft['type'] == 'lost' ? ItemType.lost : ItemType.found;
-        }
-        if (draft['category'] != null) {
-          _category = ItemCategory.values.firstWhere(
-            (e) => e.name == draft['category'],
-            orElse: () => ItemCategory.electronics,
-          );
-        }
-        if (draft['questions'] is List) {
-          _verificationQuestions.addAll(List<String>.from(draft['questions'] as List));
-        }
+        _hasRestoredDraft = false;
+        _titleController.clear();
+        _descriptionController.clear();
+        _verificationQuestions.clear();
+        _selectedImageBytes = null;
+        _taggedLat = null;
+        _taggedLng = null;
+        _selectedLocation = _campusLocations.first;
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Restored unsaved report draft.'),
+          content: Text('Draft discarded. Starting fresh report.'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -83,6 +149,22 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
   }
 
   void _persistDraft() {
+    // CRITICAL: Never overwrite/save draft if submitted or still restoring
+    if (_isSubmitted || _isRestoringDraft) return;
+
+    final title = _titleController.text.trim();
+    final description = _descriptionController.text.trim();
+
+    // If completely empty, remove any empty draft from storage
+    if (title.isEmpty &&
+        description.isEmpty &&
+        _verificationQuestions.isEmpty &&
+        _taggedLat == null &&
+        _selectedImageBytes == null) {
+      OfflineService.clearDraft();
+      return;
+    }
+
     OfflineService.saveDraft(
       title: _titleController.text,
       description: _descriptionController.text,
@@ -90,12 +172,21 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
       category: _category.name,
       location: _selectedLocation,
       questions: _verificationQuestions,
+      latitude: _taggedLat,
+      longitude: _taggedLng,
     );
   }
 
   @override
   void dispose() {
-    _persistDraft();
+    _titleController.removeListener(_onFieldChanged);
+    _descriptionController.removeListener(_onFieldChanged);
+
+    // CRITICAL: Only persist draft if user left the screen WITHOUT submitting
+    if (!_isSubmitted && !_isRestoringDraft) {
+      _persistDraft();
+    }
+
     _titleController.dispose();
     _descriptionController.dispose();
     _questionController.dispose();
@@ -186,7 +277,18 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
       await OfflineService.enqueueOfflineReport(newItem);
     }
     await ref.read(itemRepositoryProvider).addItem(newItem);
+
+    // CRITICAL: Mark submitted so dispose() does not re-save draft, and clear storage
+    _isSubmitted = true;
     await OfflineService.clearDraft();
+
+    // Clear in-memory inputs
+    _titleController.clear();
+    _descriptionController.clear();
+    _verificationQuestions.clear();
+    _selectedImageBytes = null;
+    _taggedLat = null;
+    _taggedLng = null;
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);
@@ -209,6 +311,19 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Report Campus Item'),
+        actions: [
+          if (_hasRestoredDraft ||
+              _titleController.text.isNotEmpty ||
+              _descriptionController.text.isNotEmpty)
+            TextButton.icon(
+              onPressed: _discardDraft,
+              icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.mutedRed),
+              label: const Text(
+                'Clear',
+                style: TextStyle(color: AppColors.mutedRed, fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+            ),
+        ],
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
@@ -236,7 +351,10 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
                 children: [
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() => _type = ItemType.found),
+                      onTap: () {
+                        setState(() => _type = ItemType.found);
+                        _persistDraft();
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
@@ -260,7 +378,10 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
                   ),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() => _type = ItemType.lost),
+                      onTap: () {
+                        setState(() => _type = ItemType.lost);
+                        _persistDraft();
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
@@ -311,7 +432,10 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
                 return ChoiceChip(
                   label: Text(cat.label, style: const TextStyle(fontSize: 12)),
                   selected: isSelected,
-                  onSelected: (_) => setState(() => _category = cat),
+                  onSelected: (_) {
+                    setState(() => _category = cat);
+                    _persistDraft();
+                  },
                 );
               }).toList(),
             ),
@@ -339,7 +463,10 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
                     return DropdownMenuItem(value: loc, child: Text(loc, style: const TextStyle(fontSize: 13)));
                   }).toList(),
                   onChanged: (val) {
-                    if (val != null) setState(() => _selectedLocation = val);
+                    if (val != null) {
+                      setState(() => _selectedLocation = val);
+                      _persistDraft();
+                    }
                   },
                 ),
               ),
@@ -477,7 +604,10 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
                     child: IconButton(
                       icon: const Icon(Icons.close, color: Colors.white),
                       style: IconButton.styleFrom(backgroundColor: Colors.black54),
-                      onPressed: () => setState(() => _selectedImageBytes = null),
+                      onPressed: () {
+                        setState(() => _selectedImageBytes = null);
+                        _persistDraft();
+                      },
                     ),
                   ),
                 ],
@@ -534,6 +664,13 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
                         const Icon(Icons.check_circle_outline, size: 16, color: AppColors.mutedGreen),
                         const SizedBox(width: 6),
                         Expanded(child: Text(q, style: const TextStyle(fontSize: 12))),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() => _verificationQuestions.remove(q));
+                            _persistDraft();
+                          },
+                          child: const Icon(Icons.close, size: 16, color: Colors.grey),
+                        ),
                       ],
                     ),
                   )),

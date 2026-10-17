@@ -24,6 +24,8 @@ void main() {
         category: 'electronics',
         location: 'Campus Recreation Center • Gym',
         questions: ['What initial is engraved?'],
+        latitude: 12.9716,
+        longitude: 79.1589,
       );
 
       // 3. Load draft
@@ -32,6 +34,8 @@ void main() {
       expect(loadedDraft!['title'], 'Lost AirTag');
       expect(loadedDraft['category'], 'electronics');
       expect((loadedDraft['questions'] as List).first, 'What initial is engraved?');
+      expect(loadedDraft['latitude'], 12.9716);
+      expect(loadedDraft['longitude'], 79.1589);
 
       // 4. Clear draft
       await OfflineService.clearDraft();

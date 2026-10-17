@@ -17,6 +17,8 @@ class OfflineService {
     required String category,
     required String location,
     required List<String> questions,
+    double? latitude,
+    double? longitude,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final draftData = {
@@ -26,6 +28,8 @@ class OfflineService {
       'category': category,
       'location': location,
       'questions': questions,
+      'latitude': latitude,
+      'longitude': longitude,
       'updatedAt': DateTime.now().toIso8601String(),
     };
     await prefs.setString(_draftKey, jsonEncode(draftData));
