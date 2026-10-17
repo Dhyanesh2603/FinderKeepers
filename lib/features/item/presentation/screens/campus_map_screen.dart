@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../widgets/campus_map_explorer.dart';
 
 /// Full-screen Campus Map Explorer showing all lost & found items on university landmarks.
@@ -13,6 +14,7 @@ class CampusMapScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -30,7 +32,7 @@ class CampusMapScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.add_location_alt_outlined),
             tooltip: 'Report Item at Campus Location',
-            onPressed: () => context.go('/report'),
+            onPressed: () => context.push('/report'),
           ),
         ],
       ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../chat/presentation/widgets/embedded_chat_widget.dart';
@@ -25,6 +26,7 @@ class ManageClaimsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: const Text('Review Ownership Claims'),
       ),
       body: claims.isEmpty
@@ -185,7 +187,7 @@ class ManageClaimsScreen extends ConsumerWidget {
                                       .read(itemRepositoryProvider)
                                       .updateItemStatus(itemId, ItemStatus.claimPending);
                                   if (context.mounted) {
-                                    context.go('/chat/${claim.id}');
+                                    context.push('/chat/${claim.id}');
                                   }
                                 },
                               ),

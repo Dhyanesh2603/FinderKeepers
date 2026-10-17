@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../auth/data/auth_repository.dart';
@@ -30,7 +31,9 @@ class ItemDetailScreen extends ConsumerWidget {
 
     if (item == null) {
       return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          leading: const AppBackButton(),
+        ),
         body: const Center(child: Text('Item listing not found.')),
       );
     }
@@ -43,6 +46,7 @@ class ItemDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: Text(isLost ? 'Lost Item Details' : 'Found Item Details'),
         actions: [
           IconButton(
@@ -65,7 +69,7 @@ class ItemDetailScreen extends ConsumerWidget {
                       child: AppButton(
                         label: 'Claims (${claims.length})',
                         variant: AppButtonVariant.secondary,
-                        onPressed: () => context.go('/items/$itemId/claims'),
+                        onPressed: () => context.push('/items/$itemId/claims'),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.s),
@@ -95,7 +99,7 @@ class ItemDetailScreen extends ConsumerWidget {
                                   : 'Claim Rejected • Re-apply'))),
                   onPressed: item.status == ItemStatus.reunited
                       ? null
-                      : () => context.go('/items/$itemId/claim'),
+                      : () => context.push('/items/$itemId/claim'),
                 ),
         ),
       ),
@@ -220,7 +224,7 @@ class ItemDetailScreen extends ConsumerWidget {
                       ),
                       if (!isOwner && item.status != ItemStatus.reunited)
                         InkWell(
-                          onTap: () => context.go('/items/$itemId/claim'),
+                          onTap: () => context.push('/items/$itemId/claim'),
                           borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

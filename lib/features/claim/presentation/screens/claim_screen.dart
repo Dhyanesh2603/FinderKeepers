@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -78,7 +79,11 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
         backgroundColor: AppColors.mutedGreen,
       ),
     );
-    context.go('/items/${item.id}');
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/items/${item.id}');
+    }
   }
 
   @override
@@ -90,7 +95,9 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
 
     if (item == null) {
       return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          leading: const AppBackButton(),
+        ),
         body: const Center(child: Text('Item not found.')),
       );
     }
@@ -111,6 +118,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: Text(
           isReporter
               ? (approvedClaim != null ? 'Handover & Chat' : 'Item Reporter Dashboard')
@@ -213,7 +221,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
                       const SizedBox(height: AppSpacing.l),
                       AppButton(
                         label: 'Review Submitted Claims (${claims.length})',
-                        onPressed: () => context.go('/items/${item.id}/claims'),
+                        onPressed: () => context.push('/items/${item.id}/claims'),
                       ),
                     ],
                   ),

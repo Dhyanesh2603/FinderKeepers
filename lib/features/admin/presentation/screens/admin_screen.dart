@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../claim/data/claim_repository.dart';
 import '../../../claim/domain/models/claim.dart';
@@ -44,6 +45,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> with SingleTickerProv
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: const Text('Campus Security & Admin', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
         bottom: TabBar(
           controller: _tabController,
@@ -200,7 +202,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> with SingleTickerProv
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               TextButton(
-                                onPressed: () => context.go('/items/${claim.itemId}'),
+                                onPressed: () => context.push('/items/${claim.itemId}'),
                                 child: const Text('Inspect Item', style: TextStyle(fontSize: 12)),
                               ),
                               if (claim.status == ClaimStatus.approved)
@@ -210,7 +212,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> with SingleTickerProv
                                     foregroundColor: isDark ? AppColors.charcoal : Colors.white,
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   ),
-                                  onPressed: () => context.go('/chat/${claim.id}'),
+                                  onPressed: () => context.push('/chat/${claim.id}'),
                                   child: const Text('Open Security Chat', style: TextStyle(fontSize: 12)),
                                 ),
                             ],

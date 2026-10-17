@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../data/chat_repository.dart';
 import '../../domain/models/chat_message.dart';
@@ -55,6 +56,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

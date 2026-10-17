@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../data/match_engine.dart';
 
@@ -17,6 +18,7 @@ class NotificationsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const AppBackButton(),
         title: const Text('Smart Match Alerts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
       ),
       body: matches.isEmpty
@@ -171,7 +173,7 @@ class NotificationsScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: () => context.go('/items/${match.foundItem.id}'),
+                            onPressed: () => context.push('/items/${match.foundItem.id}'),
                             child: const Text('View Found Item', style: TextStyle(fontSize: 13)),
                           ),
                           const SizedBox(width: 8),
@@ -181,7 +183,7 @@ class NotificationsScreen extends ConsumerWidget {
                               foregroundColor: isDark ? AppColors.charcoal : Colors.white,
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                             ),
-                            onPressed: () => context.go('/items/${match.foundItem.id}/claim'),
+                            onPressed: () => context.push('/items/${match.foundItem.id}/claim'),
                             child: const Text('Claim This Item', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                           ),
                         ],

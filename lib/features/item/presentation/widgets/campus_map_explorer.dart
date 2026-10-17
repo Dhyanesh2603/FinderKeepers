@@ -474,7 +474,7 @@ class _CampusMapExplorerState extends ConsumerState<CampusMapExplorer> {
                     ),
                     icon: const Icon(Icons.arrow_forward, size: 16),
                     label: const Text('View Details', style: TextStyle(fontSize: 12)),
-                    onPressed: () => context.go('/items/${item.id}'),
+                    onPressed: () => context.push('/items/${item.id}'),
                   ),
                 ),
               ],

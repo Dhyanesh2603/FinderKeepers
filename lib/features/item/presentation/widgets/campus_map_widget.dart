@@ -237,7 +237,7 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
                   const SizedBox(width: 6),
                   // Full Campus Map Link
                   InkWell(
-                    onTap: () => context.go('/map?location=${Uri.encodeComponent(widget.locationName)}'),
+                    onTap: () => context.push('/map?location=${Uri.encodeComponent(widget.locationName)}'),
                     borderRadius: BorderRadius.circular(6),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
