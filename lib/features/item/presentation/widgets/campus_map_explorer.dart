@@ -163,8 +163,8 @@ class _CampusMapExplorerState extends ConsumerState<CampusMapExplorer> {
 
   String _getTileUrl() {
     return _isSatellite
-        ? 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}' // Google Satellite Hybrid
-        : 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}'; // Google Street Maps
+        ? 'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}' // Google Satellite Hybrid
+        : 'https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}'; // Google Street Maps
   }
 
   LatLng _getItemCoordinates(Item item) {
@@ -251,9 +251,11 @@ class _CampusMapExplorerState extends ConsumerState<CampusMapExplorer> {
                   maxZoom: 19.5,
                 ),
                 children: [
-                  // Google Maps Live Tile Layer
+                  // Google Maps Live Tile Layer with subdomains and OSM fallback
                   TileLayer(
                     urlTemplate: _getTileUrl(),
+                    subdomains: const ['0', '1', '2', '3'],
+                    fallbackUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.finderskeepers.finders_keepers',
                     maxZoom: 20,
                   ),
@@ -365,9 +367,22 @@ class _CampusMapExplorerState extends ConsumerState<CampusMapExplorer> {
 
   Widget _buildFilterChip(String label, CampusMapFilter filter) {
     final isSelected = _filter == filter;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ChoiceChip(
-      label: Text(label, style: const TextStyle(fontSize: 11)),
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          color: isSelected
+              ? Colors.white
+              : (isDark ? Colors.white70 : AppColors.textPrimaryLight),
+        ),
+      ),
       selected: isSelected,
+      selectedColor: AppColors.mutedGreen,
+      backgroundColor: isDark ? AppColors.surfaceVariantDark : const Color(0xFFE5E7EB),
+      showCheckmark: false,
       onSelected: (_) => setState(() => _filter = filter),
     );
   }

@@ -72,8 +72,8 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
 
   String _getTileUrl() {
     return _isSatellite
-        ? 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}' // Google Satellite Hybrid
-        : 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}'; // Google Street Maps
+        ? 'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}' // Google Satellite Hybrid
+        : 'https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}'; // Google Street Maps
   }
 
   Future<void> _openExternalGoogleMaps(LatLng point) async {
@@ -117,9 +117,11 @@ class _CampusMapWidgetState extends State<CampusMapWidget> {
                 ),
               ),
               children: [
-                // Google Maps Tile Layer
+                // Google Maps Tile Layer with subdomains and OSM fallback
                 TileLayer(
                   urlTemplate: _getTileUrl(),
+                  subdomains: const ['0', '1', '2', '3'],
+                  fallbackUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.finderskeepers.finders_keepers',
                   maxZoom: 20,
                 ),

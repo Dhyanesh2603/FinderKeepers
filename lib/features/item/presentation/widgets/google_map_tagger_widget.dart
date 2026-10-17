@@ -147,13 +147,13 @@ class _GoogleMapTaggerWidgetState extends State<GoogleMapTaggerWidget> {
     switch (_mapStyle) {
       case GoogleMapStyle.hybrid:
         // Real Google Maps Satellite + Road & Campus Labels
-        return 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
+        return 'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
       case GoogleMapStyle.satellite:
         // Real Google Maps High-Res Satellite Imagery
-        return 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}';
+        return 'https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}';
       case GoogleMapStyle.street:
         // Real Google Maps Road & Campus Vector Streets
-        return 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
+        return 'https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
     }
   }
 
@@ -298,9 +298,23 @@ class _GoogleMapTaggerWidgetState extends State<GoogleMapTaggerWidget> {
                     (_selectedLng - preset.longitude).abs() < 0.0005;
 
                 return ChoiceChip(
-                  label: Text(preset.shortName, style: const TextStyle(fontSize: 11)),
+                  avatar: isSelected
+                      ? const Icon(Icons.check, size: 14, color: Colors.white)
+                      : null,
+                  label: Text(
+                    preset.shortName,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? Colors.white
+                          : (isDark ? Colors.white70 : AppColors.textPrimaryLight),
+                    ),
+                  ),
                   selected: isSelected,
-                  selectedColor: AppColors.mutedGreenLight,
+                  selectedColor: AppColors.mutedGreen,
+                  backgroundColor: isDark ? AppColors.surfaceVariantDark : const Color(0xFFE5E7EB),
+                  showCheckmark: false,
                   onSelected: (_) => _selectPreset(preset),
                 );
               },
@@ -322,9 +336,11 @@ class _GoogleMapTaggerWidgetState extends State<GoogleMapTaggerWidget> {
                     onTap: _onMapTapped,
                   ),
                   children: [
-                    // Real Google Maps Tile Layer
+                    // Real Google Maps Tile Layer with subdomains and OSM fallback
                     TileLayer(
                       urlTemplate: _getTileUrl(),
+                      subdomains: const ['0', '1', '2', '3'],
+                      fallbackUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'com.finderskeepers.finders_keepers',
                       maxZoom: 20,
                     ),
