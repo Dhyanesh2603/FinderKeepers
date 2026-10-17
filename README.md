@@ -1,15 +1,21 @@
 # Finders Keepers 🔍 — Campus Lost & Found Platform
 
-[![Download Release APK](https://img.shields.io/badge/Download_Release_APK-v1.0.0_(50MB)-2E7D52?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Dhyanesh2603/FinderKeepers/releases/download/v1.0.0/app-release.apk)
-[![Download Debug APK](https://img.shields.io/badge/Download_Debug_APK-v1.0.0_(187MB)-14171A?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Dhyanesh2603/FinderKeepers/releases/download/v1.0.0/app-debug.apk)
+[![Direct Download APK](https://img.shields.io/badge/Direct_Download_APK-18.8_MB-2E7D52?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Dhyanesh2603/FinderKeepers/raw/main/apk/finders-keepers-arm64.apk)
+[![GitHub Releases](https://img.shields.io/badge/GitHub_Releases-v1.0.0-14171A?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Dhyanesh2603/FinderKeepers/releases)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Dhyanesh2603%2FFinderKeepers-181717?style=for-the-badge&logo=github)](https://github.com/Dhyanesh2603/FinderKeepers)
 [![Tests Passing](https://img.shields.io/badge/Tests-24%20Passing-2E7D52?style=for-the-badge&logo=flutter)](https://github.com/Dhyanesh2603/FinderKeepers)
 
-### 📲 Standalone Android APK Deliverables
-- 🚀 **[📥 Download Release APK (`app-release.apk` — 50.1 MB)](https://github.com/Dhyanesh2603/FinderKeepers/releases/download/v1.0.0/app-release.apk)** *(Recommended: Optimized with R8 code shrinking and icon tree-shaking)*
-- 🛠️ **[📥 Download Debug APK (`app-debug.apk` — 187 MB)](https://github.com/Dhyanesh2603/FinderKeepers/releases/download/v1.0.0/app-debug.apk)** *(Includes all architectures and developer logging)*
+### 📲 Direct Android APK Downloads (Click to Download)
 
-> **Installation Instructions**: Tap either link above to download the APK directly to your physical Android device or emulator. Open the `.apk` file and tap **Install** to test the full campus lost-and-found mobile experience without needing to compile code from source.
+| Package | Architecture | Size | Direct Download Link |
+|---|---|---|---|
+| 🚀 **Release APK (Recommended)** | `ARM64-v8a` (All modern Android devices) | **18.8 MB** | [⬇️ **Download `finders-keepers-arm64.apk`**](https://github.com/Dhyanesh2603/FinderKeepers/raw/main/apk/finders-keepers-arm64.apk) |
+| 📦 **GitHub Releases** | Universal Release Assets | **v1.0.0** | [⬇️ **View GitHub Release Tag v1.0.0**](https://github.com/Dhyanesh2603/FinderKeepers/releases/tag/v1.0.0) |
+
+> 💡 **Quick Install on Android Phone**:
+> 1. Tap **[Download `finders-keepers-arm64.apk`](https://github.com/Dhyanesh2603/FinderKeepers/raw/main/apk/finders-keepers-arm64.apk)** directly on your Android phone's browser.
+> 2. When the download completes, tap the file in your notification bar or **Files / Downloads** app.
+> 3. Tap **Install** (enable "Install unknown apps" if prompted) to launch Finders Keepers instantly!
 
 ---
 
