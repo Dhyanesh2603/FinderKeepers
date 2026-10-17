@@ -5,6 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../../../chat/presentation/widgets/embedded_chat_widget.dart';
 import '../../../item/data/item_repository.dart';
 import '../../../item/domain/models/item.dart';
 import '../../data/claim_repository.dart';
@@ -192,11 +193,26 @@ class ManageClaimsScreen extends ConsumerWidget {
                           ],
                         ),
                       ] else if (isApproved) ...[
-                        AppButton(
-                          label: 'Open Secure Handover Chat',
-                          icon: Icons.chat_bubble_outline,
-                          onPressed: () => context.go('/chat/${claim.id}'),
+                        const SizedBox(height: AppSpacing.s),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.mutedGreenLight,
+                            borderRadius: AppSpacing.borderRadiusSmall,
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.check_circle, size: 16, color: AppColors.mutedGreen),
+                              SizedBox(width: 6),
+                              Text(
+                                'Claim Verified & Handover Active',
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF14532D)),
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(height: AppSpacing.m),
+                        EmbeddedChatWidget(claimId: claim.id),
                       ],
                     ],
                   ),

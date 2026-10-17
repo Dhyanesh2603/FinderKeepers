@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 
@@ -118,6 +119,36 @@ class CampusMapWidget extends StatelessWidget {
                       style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                     ),
                   ],
+                ),
+              ),
+            ),
+
+            // Top Right: Open in Campus Map Explorer
+            Positioned(
+              top: AppSpacing.s,
+              right: AppSpacing.s,
+              child: GestureDetector(
+                onTap: () => context.go('/map?location=${Uri.encodeComponent(locationName)}'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                    border: Border.all(
+                      color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.map_outlined, size: 12),
+                      SizedBox(width: 4),
+                      Text(
+                        'Full Map',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -7,7 +7,9 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../auth/data/auth_repository.dart';
+import '../../../chat/presentation/widgets/embedded_chat_widget.dart';
 import '../../../claim/data/claim_repository.dart';
+import '../../../claim/domain/models/claim.dart';
 import '../../data/item_repository.dart';
 import '../../domain/models/item.dart';
 import '../widgets/campus_map_widget.dart';
@@ -34,6 +36,9 @@ class ItemDetailScreen extends ConsumerWidget {
 
     final isOwner = currentUser != null && currentUser.uid == item.reporterId;
     final isLost = item.type == ItemType.lost;
+    final userClaim = claims.where((c) => c.claimantId == currentUser?.uid).firstOrNull;
+    final approvedClaimForOwner = isOwner ? claims.where((c) => c.status == ClaimStatus.approved).firstOrNull : null;
+    final activeChatClaimId = isOwner ? approvedClaimForOwner?.id : (userClaim?.status == ClaimStatus.approved ? userClaim?.id : null);
 
     return Scaffold(
       appBar: AppBar(
@@ -80,7 +85,13 @@ class ItemDetailScreen extends ConsumerWidget {
               : AppButton(
                   label: item.status == ItemStatus.reunited
                       ? 'Item Already Reunited'
-                      : 'Claim This Item',
+                      : (userClaim == null
+                          ? 'Claim This Item'
+                          : (userClaim.status == ClaimStatus.pending
+                              ? 'Claim Pending Review ⏳'
+                              : (userClaim.status == ClaimStatus.approved
+                                  ? 'Claim Approved • Open Chat 💬'
+                                  : 'Claim Rejected • Re-apply'))),
                   onPressed: item.status == ItemStatus.reunited
                       ? null
                       : () => context.go('/items/$itemId/claim'),
@@ -217,6 +228,34 @@ class ItemDetailScreen extends ConsumerWidget {
                 ],
               ),
             ),
+
+            if (activeChatClaimId != null) ...[
+              const SizedBox(height: AppSpacing.l),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.m),
+                decoration: BoxDecoration(
+                  color: AppColors.mutedGreenLight,
+                  borderRadius: AppSpacing.borderRadiusMedium,
+                  border: Border.all(color: AppColors.mutedGreen.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle, size: 20, color: AppColors.mutedGreen),
+                    const SizedBox(width: AppSpacing.s),
+                    Expanded(
+                      child: Text(
+                        isOwner
+                            ? 'Claim verified! You can chat directly with the verified owner below to coordinate handover.'
+                            : 'Your ownership claim was verified! Chat with the finder below to arrange safe handover.',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF14532D)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.m),
+              EmbeddedChatWidget(claimId: activeChatClaimId),
+            ],
 
             const SizedBox(height: AppSpacing.l),
 

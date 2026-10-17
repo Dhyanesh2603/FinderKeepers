@@ -10,6 +10,7 @@ import '../../features/claim/presentation/screens/claim_screen.dart';
 import '../../features/claim/presentation/screens/manage_claims_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/screens/splash_screen.dart';
+import '../../features/item/presentation/screens/campus_map_screen.dart';
 import '../../features/item/presentation/screens/item_detail_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -64,6 +65,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/admin',
         name: 'admin',
         builder: (context, state) => const AdminScreen(),
+      ),
+      GoRoute(
+        path: '/map',
+        name: 'map',
+        builder: (context, state) {
+          final location = state.uri.queryParameters['location'];
+          return CampusMapScreen(initialLocation: location);
+        },
       ),
       GoRoute(
         path: '/items/:id',

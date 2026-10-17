@@ -9,6 +9,7 @@ import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../item/data/item_repository.dart';
 import '../../../item/domain/models/item.dart';
 import '../../../notifications/data/match_engine.dart';
+import '../../../item/presentation/widgets/campus_map_explorer.dart';
 import '../controllers/feed_controller.dart';
 import '../widgets/category_filter_chips.dart';
 import '../widgets/item_card.dart';
@@ -23,6 +24,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _searchController = TextEditingController();
+  bool _isMapView = false;
 
   @override
   void dispose() {
@@ -97,6 +99,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             tooltip: 'Smart Match Alerts',
             onPressed: () => context.go('/notifications'),
+          ),
+          // Campus Map Explorer Toggle
+          IconButton(
+            icon: Icon(
+              _isMapView ? Icons.view_agenda_outlined : Icons.map_outlined,
+              size: 22,
+              color: _isMapView ? AppColors.mutedGreen : null,
+            ),
+            tooltip: _isMapView ? 'Feed List View' : 'Campus Map Explorer',
+            onPressed: () => setState(() => _isMapView = !_isMapView),
           ),
           // Campus Security Admin Console
           IconButton(
@@ -211,9 +223,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
 
+            const SizedBox(height: AppSpacing.s),
+
+            // View Mode Switcher: Feed List vs. Campus Map
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.surfaceVariantDark
+                      : AppColors.surfaceVariantLight,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+                ),
+                child: Row(
+                  children: [
+                    _buildModeTab(
+                      label: 'Feed List',
+                      icon: Icons.view_agenda_outlined,
+                      isSelected: !_isMapView,
+                      onTap: () => setState(() => _isMapView = false),
+                    ),
+                    _buildModeTab(
+                      label: 'Campus Map',
+                      icon: Icons.map_outlined,
+                      isSelected: _isMapView,
+                      onTap: () => setState(() => _isMapView = true),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
             const SizedBox(height: AppSpacing.m),
 
-            // Segmented Type Pill Switcher (All, Lost, Found)
+            if (_isMapView)
+              Expanded(
+                child: CampusMapExplorerWidget(
+                  filterType: selectedType,
+                ),
+              )
+            else ...[
+              // Segmented Type Pill Switcher (All, Lost, Found)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
               child: Container(
@@ -276,29 +327,90 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: AppSpacing.xs),
 
             // Items List / Empty State
-            Expanded(
-              child: items.isEmpty
-                  ? _buildEmptyState(context)
-                  : ListView.separated(
-                      padding: const EdgeInsets.only(
-                        left: AppSpacing.xl,
-                        right: AppSpacing.xl,
-                        top: AppSpacing.xs,
-                        bottom: 80, // Space for FAB
+              Expanded(
+                child: items.isEmpty
+                    ? _buildEmptyState(context)
+                    : ListView.separated(
+                        padding: const EdgeInsets.only(
+                          left: AppSpacing.xl,
+                          right: AppSpacing.xl,
+                          top: AppSpacing.xs,
+                          bottom: 80, // Space for FAB
+                        ),
+                        itemCount: items.length,
+                        separatorBuilder: (_, index) =>
+                            const SizedBox(height: AppSpacing.m),
+                        itemBuilder: (context, index) {
+                          final item = items[index];
+                          return ItemCard(
+                            item: item,
+                            onTap: () => context.go('/items/${item.id}'),
+                          );
+                        },
                       ),
-                      itemCount: items.length,
-                      separatorBuilder: (_, index) =>
-                          const SizedBox(height: AppSpacing.m),
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        return ItemCard(
-                          item: item,
-                          onTap: () => context.go('/items/${item.id}'),
-                        );
-                      },
-                    ),
-            ),
+              ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModeTab({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (isDark ? AppColors.surfaceDark : Colors.white)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusPill),
+            boxShadow: isSelected && !isDark
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 15,
+                color: isSelected
+                    ? (isDark ? Colors.white : AppColors.charcoal)
+                    : (isDark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondaryLight),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected
+                      ? (isDark ? Colors.white : AppColors.charcoal)
+                      : (isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondaryLight),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
