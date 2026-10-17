@@ -139,6 +139,9 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
         _taggedLat = result.latitude;
         _taggedLng = result.longitude;
         _selectedLocation = result.locationName;
+        if (!_campusLocations.contains(result.locationName)) {
+          _campusLocations.insert(0, result.locationName);
+        }
       });
       _persistDraft();
     }
@@ -332,7 +335,7 @@ class _ReportItemScreenState extends ConsumerState<ReportItemScreen> {
                 child: DropdownButton<String>(
                   value: _selectedLocation,
                   isExpanded: true,
-                  items: _campusLocations.map((loc) {
+                  items: <String>{..._campusLocations, _selectedLocation}.map((loc) {
                     return DropdownMenuItem(value: loc, child: Text(loc, style: const TextStyle(fontSize: 13)));
                   }).toList(),
                   onChanged: (val) {
